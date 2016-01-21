@@ -920,8 +920,8 @@ JUEQBEEQhCZIsCQIgiAIgtCE/wekHumihdGkLAAAAABJRU5ErkJggg==
 <div class="prompt input_prompt">In&nbsp;[126]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython2"><pre><span class="c"># We are going to train the network by minimizing the negative log likelihood</span>
-<span class="k">class</span> <span class="nc">negative_log_likelihood</span><span class="p">:</span>
+<div class=" highlight hl-ipython2"><pre><span class="c"># We are going to train the network by minimizing the following cost function</span>
+<span class="k">class</span> <span class="nc">cost_function</span><span class="p">:</span>
     <span class="k">def</span> <span class="nf">compute_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="n">label</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">output_</span><span class="p">))</span><span class="o">/</span><span class="n">output_</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
@@ -989,7 +989,7 @@ JUEQBEEQhCZIsCQIgiAIgtCE/wekHumihdGkLAAAAABJRU5ErkJggg==
 <span class="n">mlp_instance</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">784</span><span class="p">,</span><span class="mi">1000</span><span class="p">,</span><span class="n">fac</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">())</span> <span class="c"># add the hidden layer, 1000 neurons with sigmoid activation</span>
 <span class="n">mlp_instance</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="n">fac</span><span class="o">.</span><span class="n">Softmax</span><span class="p">())</span>  <span class="c"># add the output layer, 10 neurons with softmax activation</span>
 <span class="c"># Cost function</span>
-<span class="n">J</span> <span class="o">=</span> <span class="n">negative_log_likelihood</span><span class="p">()</span>
+<span class="n">J</span> <span class="o">=</span> <span class="n">cost_function</span><span class="p">()</span>
 </pre></div>
 
 </div>
@@ -1917,7 +1917,7 @@ QBcREYkBBbqIiEgMKNBFRERiQIEuIiISA/8fWBj55iVORFoAAAAASUVORK5CYII=
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="prompt input_prompt">In&nbsp;[371]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython2"><pre><span class="n">outputs</span> <span class="o">=</span> <span class="n">mlp_instance</span><span class="o">.</span><span class="n">forward_pass</span><span class="p">(</span><span class="n">trainset</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
@@ -1928,6 +1928,20 @@ QBcREYkBBbqIiEgMKNBFRERiQIEuIiISA/8fWBj55iVORFoAAAAASUVORK5CYII=
 </pre></div>
 
 </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Trainset score : 100.00 percent
+</pre>
+</div>
+</div>
+
 </div>
 </div>
 
@@ -1946,12 +1960,12 @@ QBcREYkBBbqIiEgMKNBFRERiQIEuIiISA/8fWBj55iVORFoAAAAASUVORK5CYII=
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>I did some experiment to visualize the influence of the batch size on the training :</p>
+<p>I did some experiments to visualize the influence of the batch size on the training :</p>
 <ul>
 <li>in terms of #epochs </li>
 <li>in terms of clock time</li>
 </ul>
-<p>Every other hyper parameter stay the same. The seed is fixed before each training.</p>
+<p>Every other hyper-parameters stay the same. The seed is fixed before each training.</p>
 
 </div>
 </div>
@@ -1976,7 +1990,7 @@ QBcREYkBBbqIiEgMKNBFRERiQIEuIiISA/8fWBj55iVORFoAAAAASUVORK5CYII=
 <span class="n">mlp_instance</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">784</span><span class="p">,</span><span class="mi">1000</span><span class="p">,</span><span class="n">fac</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">())</span>
 <span class="n">mlp_instance</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="n">fac</span><span class="o">.</span><span class="n">Softmax</span><span class="p">())</span>
 <span class="c"># Cost function</span>
-<span class="n">J</span> <span class="o">=</span> <span class="n">negative_log_likelihood</span><span class="p">()</span>
+<span class="n">J</span> <span class="o">=</span> <span class="n">cost_function</span><span class="p">()</span>
 
 <span class="n">nepochs_max</span> <span class="o">=</span> <span class="mi">100</span> <span class="c"># 50 epochs max</span>
 <span class="n">l</span> <span class="o">=</span> <span class="mf">0.005</span> <span class="c"># learning rate</span>
@@ -2041,7 +2055,7 @@ Epoch 13 	 Train Cost = 0.01 	 Valid Cost = 0.43 	 Best Cost = 0.42 	 Time = 566
 <span class="n">mlp_instance</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">784</span><span class="p">,</span><span class="mi">1000</span><span class="p">,</span><span class="n">fac</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">())</span>
 <span class="n">mlp_instance</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="n">fac</span><span class="o">.</span><span class="n">Softmax</span><span class="p">())</span>
 <span class="c"># Cost function</span>
-<span class="n">J</span> <span class="o">=</span> <span class="n">negative_log_likelihood</span><span class="p">()</span>
+<span class="n">J</span> <span class="o">=</span> <span class="n">cost_function</span><span class="p">()</span>
 
 <span class="n">nepochs_max</span> <span class="o">=</span> <span class="mi">100</span> <span class="c"># 50 epochs max</span>
 <span class="n">l</span> <span class="o">=</span> <span class="mf">0.005</span> <span class="c"># learning rate</span>
@@ -2106,7 +2120,7 @@ Epoch 13 	 Train Cost = 0.01 	 Valid Cost = 0.42 	 Best Cost = 0.41 	 Time = 23s
 <span class="n">mlp_instance</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">784</span><span class="p">,</span><span class="mi">1000</span><span class="p">,</span><span class="n">fac</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">())</span>
 <span class="n">mlp_instance</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="n">fac</span><span class="o">.</span><span class="n">Softmax</span><span class="p">())</span>
 <span class="c"># Cost function</span>
-<span class="n">J</span> <span class="o">=</span> <span class="n">negative_log_likelihood</span><span class="p">()</span>
+<span class="n">J</span> <span class="o">=</span> <span class="n">cost_function</span><span class="p">()</span>
 
 <span class="n">nepochs_max</span> <span class="o">=</span> <span class="mi">100</span> <span class="c"># 50 epochs max</span>
 <span class="n">l</span> <span class="o">=</span> <span class="mf">0.005</span> <span class="c"># learning rate</span>
@@ -2171,7 +2185,7 @@ Epoch 13 	 Train Cost = 0.01 	 Valid Cost = 0.41 	 Best Cost = 0.41 	 Time = 21s
 <span class="n">mlp_instance</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">784</span><span class="p">,</span><span class="mi">1000</span><span class="p">,</span><span class="n">fac</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">())</span>
 <span class="n">mlp_instance</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="n">fac</span><span class="o">.</span><span class="n">Softmax</span><span class="p">())</span>
 <span class="c"># Cost function</span>
-<span class="n">J</span> <span class="o">=</span> <span class="n">negative_log_likelihood</span><span class="p">()</span>
+<span class="n">J</span> <span class="o">=</span> <span class="n">cost_function</span><span class="p">()</span>
 
 <span class="n">nepochs_max</span> <span class="o">=</span> <span class="mi">100</span> <span class="c"># 50 epochs max</span>
 <span class="n">l</span> <span class="o">=</span> <span class="mf">0.005</span> <span class="c"># learning rate</span>

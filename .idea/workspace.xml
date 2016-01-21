@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="c799eedb-f515-4bfe-8c5a-0599db0a4116" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/first_assignment/__init__.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/first_assignment/first_assignment_classes.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/1st assignment - MLP on MNIST database.ipynb" afterPath="$PROJECT_DIR$/1st assignment - MLP on MNIST database.ipynb" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="ift6266h16.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -27,7 +27,7 @@
       <file leaf-file-name="first_assignment_classes.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/first_assignment/first_assignment_classes.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.44347826">
+            <state vertical-scroll-proportion="0.14927536">
               <caret line="116" column="102" selection-start-line="116" selection-start-column="102" selection-end-line="116" selection-end-column="102" />
               <folding>
                 <element signature="e#26#44#0" expanded="true" />
@@ -45,7 +45,6 @@
                 <element signature="e#9722#10047#0" expanded="false" />
                 <element signature="e#10092#10912#0" expanded="false" />
                 <element signature="e#10966#11101#0" expanded="false" />
-                <element signature="e#11134#11311#0" expanded="false" />
                 <element signature="e#11344#11976#0" expanded="false" />
               </folding>
             </state>
@@ -354,7 +353,6 @@
             <element signature="e#9722#10047#0" expanded="false" />
             <element signature="e#10092#10912#0" expanded="false" />
             <element signature="e#10966#11101#0" expanded="false" />
-            <element signature="e#11134#11311#0" expanded="false" />
             <element signature="e#11344#11976#0" expanded="false" />
           </folding>
         </state>
@@ -378,7 +376,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/first_assignment/first_assignment_classes.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.44347826">
+        <state vertical-scroll-proportion="0.14927536">
           <caret line="116" column="102" selection-start-line="116" selection-start-column="102" selection-end-line="116" selection-end-column="102" />
           <folding>
             <element signature="e#26#44#0" expanded="true" />
@@ -396,7 +394,6 @@
             <element signature="e#9722#10047#0" expanded="false" />
             <element signature="e#10092#10912#0" expanded="false" />
             <element signature="e#10966#11101#0" expanded="false" />
-            <element signature="e#11134#11311#0" expanded="false" />
             <element signature="e#11344#11976#0" expanded="false" />
           </folding>
         </state>

@@ -14,13 +14,13 @@ class TrainingParams():
         self.Nvalid = 5000
         self.final_size = (100,100)
         self.preprocessing = generator_from_file
-        self.preprocessing_args = ["D:\\fuel_data\\dogs_vs_cats\\trainset_uint8_200x200.npy",
-                                   "D:\\fuel_data\\dogs_vs_cats\\trainset_targets_uint8_200x200.npy",
+        self.preprocessing_args = ["data\\grayscale_200x200\\trainset_uint8_200x200.npy",
+                                   "data\\grayscale_200x200\\trainset_targets_uint8_200x200.npy",
                                    32,
                                    rotate_crop_and_scale,
                                    [(100,100), 10, 10, 255.0]]
-        self.validset = "D:\\fuel_data\\dogs_vs_cats\\validset_uint8_200x200.npy"
-        self.valid_targets = "D:\\fuel_data\\dogs_vs_cats\\validset_targets_uint8_200x200.npy"
+        self.validset = "data\\grayscale_200x200\\validset_uint8_200x200.npy"
+        self.valid_targets = "data\\grayscale_200x200\\validset_targets_uint8_200x200.npy"
         # Training parameters
         self.learning_rate = 0.01
         self.learning_rate_min = 0.0001

@@ -139,11 +139,11 @@ def launch_training(training_params):
         draw_validset = np.load(training_params.validset)
         valid_targets = np.load(training_params.valid_targets)
     # Resize images from the validset
-    validset = np.zeros((training_params.Nvalid, 1, training_params.final_size[0], training_params.final_size[1]),
+    validset = np.zeros((training_params.Nvalid, training_params.final_size[2], training_params.final_size[0], training_params.final_size[1]),
                         dtype="float32")
     with timer("Resizing validset images"):
         for i in range(training_params.Nvalid):
-            validset[i,0] = resize(draw_validset[i,0], training_params.final_size)
+            validset[i] = resize(draw_validset[i], training_params.final_size[0:2]).transpose(2,0,1)
     del draw_validset
 
     ###### MODEL INITIALIZATION #######

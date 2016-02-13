@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import PIL
 import os
+import time
 
 def remove_black_borders_from_rotation(rotated_img, angle):
 
@@ -12,7 +13,7 @@ def remove_black_borders_from_rotation(rotated_img, angle):
         out = remove_black_borders_from_rotation(rotated_img[:,::-1], -angle)
         return out[:,::-1]
 
-    row, col = rotated_img.shape
+    row, col = rotated_img.shape[0:2]
 
     first_row = rotated_img[0]
     first_col = rotated_img[:,0]
@@ -27,7 +28,7 @@ def remove_black_borders_from_rotation(rotated_img, angle):
 
 def remove_black_borders_from_translation(translated_img, tx, ty):
 
-    row, col = translated_img.shape
+    row, col = translated_img.shape[0:2]
 
     left = max(0,tx)
     right = min(col,col+tx)
@@ -37,11 +38,21 @@ def remove_black_borders_from_translation(translated_img, tx, ty):
     return translated_img[up:down, left:right]
 
 def rotate(img, angle):
-    pil_img = PIL.Image.fromarray(img)
-    return np.array(pil_img.rotate(angle), dtype=img.dtype)
+    if img.ndim == 3:
+        if img.shape[2]==1:
+            pil_img = PIL.Image.fromarray(img[:,:,0])
+    else:
+        pil_img = PIL.Image.fromarray(img)
+    return np.array(pil_img.rotate(angle), dtype=img.dtype).reshape(img.shape)
 
 def resize(img, size, interpolation = cv2.INTER_CUBIC):
-    return cv2.resize(img, size, interpolation = interpolation)
+    if img.ndim == 2:
+        return cv2.resize(img, size, interpolation = interpolation)
+    else:
+        if img.shape[2] == 3:
+            return cv2.resize(img, size, interpolation = interpolation)
+        else:
+            return cv2.resize(img, size, interpolation = interpolation)[:,:,None]
 
 def resize_and_scale(img, size, scale, interpolation = cv2.INTER_CUBIC):
     img = resize(img, size, interpolation)
@@ -62,7 +73,7 @@ def convert_to_grayscale(img):
     return cv2.cvtColor( img, cv2.COLOR_RGB2GRAY )
 
 def crop(img, crop_rates):
-    rows,cols = img.shape
+    rows,cols = img.shape[0:2]
     crop_up, crop_down, crop_left, crop_right = crop_rates
     crop_up = int(crop_up*rows/100.0)
     crop_down = int(crop_down*rows/100.0)
@@ -84,9 +95,9 @@ def rotate_crop_and_scale(img, final_size, max_angle, max_crop_rate, scale):
     # Flip left right
     if np.random.randint(0,2)==1:
         resized_img = np.fliplr(resized_img)
-    output_img = resized_img[None,:,:]
+    #output_img = resized_img[None,:,:]
     # Return
-    return output_img
+    return resized_img
 
 def convert_labels(labels_1D):
     """

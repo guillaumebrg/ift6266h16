@@ -3,7 +3,11 @@
 # Dogs vs Cats code :
 - If you have Keras installed on your computer, you should be able to launch a training using the 2 folowing steps :
       - Create a folder 'experiments' at the racine of 'train_model.py'
+      - Create a folder 'data' at the racine of 'train_model.py'
+      - In the 'data folder', save a numpy file (using numpy.save) for the trainset, and the validset. Arrays must have the following shape : (N, Sx, Sy, C) where N is the number of examples, Sx, Sy the image size, and C the number of channels. The path to the trainset and validset have to be updated in the "training_params.py" script.
       - Open a console and run "python train_model.py"
+
+
 - The train_model.py file contains the function 'launch_training' which is used for training a Keras model. This function instantiates a TrainingParams object (see training_params.py) which defines a lot of parameters for the training. 
 - The architecture of the model should be defined in a python script located in the 'def_model' directory. This script should define a function called 'define_model' which create a keras network (see first_convnet.py for an example). This function should be then imported in the training_params.py file, and given to the TrainingParams class.
 - The function 'train_model.py' is going to use a Keras callback to save models generated during the training. See the 'ModelChecpoint_perso' class.

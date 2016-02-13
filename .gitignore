@@ -46,3 +46,4 @@ Temporary Items
 dogs_vs_cats/experiments/
 dogs_vs_cats/data/
 *.pyc
+*.xml

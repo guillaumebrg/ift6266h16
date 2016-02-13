@@ -126,11 +126,57 @@ def generator_from_file(file, file_target, batch_size, preprocessing_func, prepr
     while 1:
         trainset = np.load(file)
         targets = np.load(file_target)
-        for i in range(trainset.shape[0]/batch_size)[0:-1]:
-            batch = np.zeros((batch_size, 1, 100, 100), dtype="float32")
-            for k in range(batch_size):
-                batch[k,0] = preprocessing_func(trainset[i*batch_size+k,0], *preprocessing_args)
-            yield batch, targets[i*batch_size:((i+1)*batch_size)]
+        # Shuffling
+        index = np.arange(0,trainset.shape[0],1)
+        np.random.shuffle(index)
+        trainset = trainset[index]
+        targets = targets[index]
+        # Batch loop
+        for i in range(trainset.shape[0]/batch_size[0])[0:-1]:
+            batch = np.zeros(batch_size, dtype="float32")
+            for k in range(batch_size[0]):
+                batch[k] = preprocessing_func(trainset[i*batch_size[0]+k], *preprocessing_args).transpose(2,0,1)
+            batch_targets = targets[i*batch_size[0]:((i+1)*batch_size[0])]
+
+            yield batch, batch_targets
+
+        del trainset, targets, batch, batch_targets
+
+def generator_from_files(files, files_targets, batch_size, preprocessing_func, preprocessing_args):
+    """
+    Generator function used when using the keras function 'fit_on_generator'. Load the trainset as a numpy
+    array, and the corresponding targets, and returns a tuple to the training containing a processed batch and
+    targets. This can be done on the CPU, in parallel of a GPU training. See 'fit_on_generator' for more details.
+
+    :param file: path to training data
+    :param file_target: path to training targets
+    :param batch_size:
+    :param preprocessing_func: function which will be applied to each training batch
+    :param preprocessing_args: arguments of the preprocessing function
+    :return: tuple(batch,targets)
+    """
+    while 1:
+        for file,file_targets in zip(files, files_targets):
+            # Loading data
+            trainset = np.load(file)
+            targets = np.load(file_targets)
+            # Shuffling
+            index = np.arange(0,trainset.shape[0],1)
+            np.random.shuffle(index)
+            trainset = trainset[index]
+            targets = targets[index]
+            # Batch loop
+            for i in range(trainset.shape[0]/batch_size[0])[0:-1]:
+                batch = np.zeros(batch_size, dtype="float32")
+                for k in range(batch_size[0]):
+                    batch[k] = preprocessing_func(trainset[i*batch_size[0]+k], *preprocessing_args).transpose(2,0,1)
+                batch_targets = targets[i*batch_size[0]:((i+1)*batch_size[0])]
+
+                yield batch, batch_targets
+
+        del trainset, targets, batch, batch_targets
+
+
 def chech_preprocessed_data(file, file_target, batch_size, preprocessing_func, preprocessing_args, debug=None):
     if type(file) is list:
         # Loading data

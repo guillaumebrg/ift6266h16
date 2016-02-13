@@ -20,6 +20,9 @@ def remove_black_borders_from_rotation(rotated_img, angle):
     cropx = np.argwhere(np.cumsum(first_row[::-1]!=0)==1)[0][0]
     cropy = np.argwhere(np.cumsum(first_col!=0)==1)[0][0]
 
+    if cropy>(0.4*row) or cropx>(0.4*col):
+        return rotated_img
+
     return rotated_img[cropy:(row-cropy), cropx:(col-cropx)]
 
 def remove_black_borders_from_translation(translated_img, tx, ty):
@@ -77,10 +80,7 @@ def rotate_crop_and_scale(img, final_size, max_angle, max_crop_rate, scale):
     crop_rates = np.random.randint(0, max_crop_rate, 4) # translation rates
     cropped_im = crop(cropped_rotated_img, crop_rates)
     # Resize and scale
-    try:
-        resized_img = resize_and_scale(cropped_im, final_size, scale, interpolation=cv2.INTER_CUBIC)
-    except: # sometimes i get an error when resizing with open cv (ssize.area < 0 error)
-        resized_img = np.zeros(final_size, dtype="float32")
+    resized_img = resize_and_scale(cropped_im, final_size, scale, interpolation=cv2.INTER_CUBIC)
     # Flip left right
     if np.random.randint(0,2)==1:
         resized_img = np.fliplr(resized_img)

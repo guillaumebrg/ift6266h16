@@ -131,3 +131,42 @@ def generator_from_file(file, file_target, batch_size, preprocessing_func, prepr
             for k in range(batch_size):
                 batch[k,0] = preprocessing_func(trainset[i*batch_size+k,0], *preprocessing_args)
             yield batch, targets[i*batch_size:((i+1)*batch_size)]
+def chech_preprocessed_data(file, file_target, batch_size, preprocessing_func, preprocessing_args, debug=None):
+    if type(file) is list:
+        # Loading data
+        trainset = np.load(file[0])
+        targets = np.load(file_target[0])
+    else:
+        # Loading data
+        trainset = np.load(file)
+        targets = np.load(file_target)
+    # Shuffling
+    index = np.arange(0,trainset.shape[0],1)
+    np.random.shuffle(index)
+    trainset = trainset[index]
+    targets = targets[index]
+    # Compute only one batch
+    batch = np.zeros(batch_size, dtype="float32")
+    start=time.time()
+    for k in range(batch_size[0]):
+        batch[k] = preprocessing_func(trainset[k], *preprocessing_args).transpose(2,0,1)
+    batch_targets = targets[0:batch_size[0]]
+    end=time.time()
+    try:
+        n = int(debug)
+    except:
+        n = 10
+    for i in range(n):
+        plt.figure(0)
+        plt.gray()
+        plt.clf()
+        plt.title("(%d,%d)"%(batch_targets[i][0],batch_targets[i][1]))
+        if batch.shape[1]==3:
+            plt.imshow(batch[i].transpose(1,2,0))
+        else:
+            plt.imshow(batch[i,0])
+        plt.show()
+    print "Processing 1 batch took : %.5f"%(end-start)
+
+
+    del trainset, targets, batch, batch_targets

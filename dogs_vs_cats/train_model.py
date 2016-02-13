@@ -9,7 +9,7 @@ import sys
 
 from contextlib import contextmanager
 from keras.callbacks import Callback, EarlyStopping
-from preprocessing import resize
+from preprocessing import resize, chech_preprocessed_data
 from reporting import write_experiment_report
 from training_params import TrainingParams
 
@@ -186,7 +186,23 @@ def launch_training(training_params):
             count += 1
 
 if __name__ == "__main__":
-    training_params = TrainingParams()
-    launch_training(training_params)
-    write_experiment_report(training_params.path_out, multipages=True)
-    write_experiment_report(training_params.path_out, multipages=False)
+    end = False
+    mode = ""
+    try:
+        mode = sys.argv[1]
+    except:
+        print "Expects an argument : '-train' or '-check'"
+        end = True
+
+    if end is not True:
+        training_params = TrainingParams()
+        if mode=="-train":
+            launch_training(training_params)
+            write_experiment_report(training_params.path_out, multipages=True)
+            write_experiment_report(training_params.path_out, multipages=False)
+        elif mode=="-check":
+            n = int(sys.argv[2])
+            training_params.preprocessing_args.append(n)
+            chech_preprocessed_data(*training_params.preprocessing_args)
+        else:
+            print "Mode not undertstood. '-train' or '-check' are available."

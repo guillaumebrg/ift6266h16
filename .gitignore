@@ -44,4 +44,5 @@ Temporary Items
 
 # Experiment directory
 dogs_vs_cats/experiments/
+dogs_vs_cats/data/
 *.pyc

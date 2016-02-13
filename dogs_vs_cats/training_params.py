@@ -1,26 +1,31 @@
 __author__ = 'Guillaume'
 
-import def_model.first_convnet as first_convnet
+import def_model.vggnet_with_dropout as vggnet_with_dropout
 
 from preprocessing import generator_from_file, rotate_crop_and_scale, resize_and_scale
 
 class TrainingParams():
     def __init__(self):
         # Model definition
-        self.model_definition = first_convnet
+        self.model_definition = vggnet_with_dropout
         self.model_args = []
         # Data processing
         self.Ntrain = 20000
         self.Nvalid = 5000
-        self.final_size = (100,100)
+        self.final_size = (150,150,1)
         self.preprocessing = generator_from_file
-        self.preprocessing_args = ["data\\grayscale_200x200\\trainset_uint8_200x200.npy",
-                                   "data\\grayscale_200x200\\trainset_targets_uint8_200x200.npy",
-                                   32,
+        self.preprocessing_args = ["data\\grayscale_250x250\\trainset_uint8_250x250x1.npy",
+                                   "data\\grayscale_250x250\\trainset_targets_uint8_250x250x1.npy",
+                                   (32, 1, 150, 150),
                                    rotate_crop_and_scale,
-                                   [(100,100), 10, 10, 255.0]]
-        self.validset = "data\\grayscale_200x200\\validset_uint8_200x200.npy"
-        self.valid_targets = "data\\grayscale_200x200\\validset_targets_uint8_200x200.npy"
+                                   [(150,150), 10, 5, 255.0]]
+        # self.preprocessing_args = [["data\\rgb_200x200\\trainset_uint8_200x200x3_part%d.npy"%count for count in range(4)],
+        #                            ["data\\rgb_200x200\\trainset_targets_uint8_200x200x3_part%d.npy"%count for count in range(4)],
+        #                            (32, 3, 100, 100),
+        #                            rotate_crop_and_scale,
+        #                            [(100,100), 10, 5, 255.0]]
+        self.validset = "data\\grayscale_250x250\\validset_uint8_250x250x1.npy"
+        self.valid_targets = "data\\grayscale_250x250\\validset_targets_uint8_250x250x1.npy"
         # Training parameters
         self.learning_rate = 0.01
         self.learning_rate_min = 0.0001
@@ -30,7 +35,7 @@ class TrainingParams():
         self.verbose = 2
         self.batch_size = 32
         # Saving dir
-        self.path_out = "experiments\\first_cnn_with_data_aug"
+        self.path_out = "experiments\\vggnet_150x150_dropout_first_layers"
 
         # Update arguments of the initialize the model
         self.update_model_args()

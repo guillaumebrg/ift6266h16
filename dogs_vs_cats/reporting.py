@@ -139,14 +139,14 @@ def draw_experiment_figures(path_to_experiment, subdir_names="MEM", history_file
     """
     # Get sub directories : this works only with sub dir called "MEMxxx"
     expe_list = os.listdir(path_to_experiment)
-    expe_list = [path_to_experiment+"\\"+dir_ for dir_ in expe_list if dir_.find(subdir_names)==0]
+    expe_list = [path_to_experiment+"/"+dir_ for dir_ in expe_list if dir_.find(subdir_names)==0]
     # Open history.pkl files
     train_loss = []
     valid_loss = []
     train_acc = []
     valid_acc = []
     for dir_ in expe_list:
-        with open(dir_+"\\%s"%history_files_name, "r") as f:
+        with open(dir_+"/%s"%history_files_name, "r") as f:
             train_loss.append(pickle.load(f))
             valid_loss.append(pickle.load(f))
             train_acc.append(pickle.load(f))
@@ -198,10 +198,10 @@ def write_experiment_report(path_to_experiment, subdir_names="MEM", history_file
     one figure per page, or every figures on the same page.
     """
     if multipages is True:
-        with PdfPages(path_to_experiment+'\\multi_reports.pdf') as pdf:
+        with PdfPages(path_to_experiment+'/multi_reports.pdf') as pdf:
             draw_experiment_figures(path_to_experiment, subdir_names, history_files_name, pdf=pdf, multifigures=multipages)
     else:
-        with PdfPages(path_to_experiment+'\\report.pdf') as pdf:
+        with PdfPages(path_to_experiment+'/report.pdf') as pdf:
             draw_experiment_figures(path_to_experiment, subdir_names, history_files_name, pdf=pdf, multifigures=multipages)
 
 

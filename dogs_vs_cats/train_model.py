@@ -57,12 +57,11 @@ class ModelCheckpoint_perso(Callback):
             if os.path.exists(self.filepath) is False:
                 os.mkdir(self.filepath)
 
-            with open(self.filepath+"\\config.netconf","w") as f:
-                json.dump(self.model.to_json(), f)
+            open(self.filepath+"/config.netconf", 'w').write(self.model.to_json())
 
-            save_path = self.filepath+"\\after_random.cnn"
+            save_path = self.filepath+"/after_random.cnn"
             if self.verbose > 0:
-                f = open(self.filepath+"\\log.txt", "w")
+                f = open(self.filepath+"/log.txt", "w")
                 f.write(self.optional_string)
                 f.write("***\nEpoch %05d: %s after random  model saved to %s\n"%(epoch, self.monitor, save_path))
                 f.close()
@@ -77,18 +76,18 @@ class ModelCheckpoint_perso(Callback):
         else:
             condition = current < self.best
         if condition:
-            save_path = self.filepath+"\\best_model.cnn"
+            save_path = self.filepath+"/best_model.cnn"
             if self.verbose > 0:
                 string = "***\nEpoch %05d: %s improved from %0.5f to %0.5f\n"% (epoch, self.monitor, self.best, current)
-                write_log(self.filepath+"\\log.txt", string)
+                write_log(self.filepath+"/log.txt", string)
             self.best = current
             self.model.save_weights(save_path, overwrite=True)
 
         else:
-            save_path = self.filepath+"\\last_epoch.cnn"
+            save_path = self.filepath+"/last_epoch.cnn"
             if self.verbose > 0:
                 string = "***\nEpoch %05d: %s did not improve : %0.5f\n"% (epoch, self.monitor, current)
-                write_log(self.filepath+"\\log.txt", string)
+                write_log(self.filepath+"/log.txt", string)
             self.model.save_weights(save_path, overwrite=True)
 
 def write_log(path, string):
@@ -132,7 +131,7 @@ def launch_training(training_params):
     :return:
     """
     if os.path.exists(training_params.path_out) is False:
-        os.mkdir(training_params.path_out)
+        os.mkdir(os.path.abspath(training_params.path_out))
 
     ###### LOADING DATA #######
     with timer("Loading validset data"):
@@ -153,7 +152,7 @@ def launch_training(training_params):
     ###### SAVE PARAMS ######
     s = training_params.print_params()
     # Save command
-    f = open(training_params.path_out+"\\command.txt", "w")
+    f = open(training_params.path_out+"/command.txt", "w")
     f.writelines(" ".join(sys.argv))
     f.writelines(s)
     f.close()
@@ -166,10 +165,10 @@ def launch_training(training_params):
 
             if count != 0: # Restart from the best model with a lower LR
                 model = training_params.initialize_model()
-                model.load_weights(training_params.path_out+"\\MEM_%d\\best_model.cnn"%(count-1))
+                model.load_weights(training_params.path_out+"/MEM_%d/best_model.cnn"%(count-1))
             # Callbacks
             early_stoping = EarlyStopping(monitor="val_loss",patience=training_params.max_no_best)
-            save_model = ModelCheckpoint_perso(filepath=training_params.path_out+"\\MEM_%d"%count, verbose=1,
+            save_model = ModelCheckpoint_perso(filepath=training_params.path_out+"/MEM_%d"%count, verbose=1,
                                                optional_string=s, monitor="val_acc", mode="acc")
 
             history = model.fit_generator(training_params.preprocessing(*training_params.preprocessing_args),
@@ -182,7 +181,7 @@ def launch_training(training_params):
 
             training_params.learning_rate *= 0.1
             training_params.update_model_args()
-            save_history(training_params.path_out+"\\MEM_%d\\history.pkl"%count, history)
+            save_history(training_params.path_out+"/MEM_%d/history.pkl"%count, history)
             count += 1
 
 if __name__ == "__main__":

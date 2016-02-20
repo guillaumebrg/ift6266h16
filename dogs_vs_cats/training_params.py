@@ -35,7 +35,7 @@ class TrainingParams():
         self.verbose = 2
         self.batch_size = 32
         # Saving dir
-        self.path_out = "experiments\\vggnet_150x150_dropout_first_layers"
+        self.path_out = os.path.abspath("experiments/blog_post_3_regularization/vggnet_dropout_0.7")
 
         # Update arguments of the initialize the model
         self.update_model_args()

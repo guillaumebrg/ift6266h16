@@ -6,7 +6,7 @@
       - Create a folder 'experiments' at the racine of 'train_model.py'
       - Open a console and run "python train_model.py -train"
 
-- If you want to load dataset in memory, you should set "data_acces" to "in-memory" in training_params.py, and write the path to numpy files (saved using numpy.save) in "dataset_path" and "targets_path". The dataset must be an array of shape (Nb_examples, Size_X, Size_Y, Channels), and targets must be 1D (targets will be converted to 2D arrays during preprocessing).
+- If you want to load datasets in memory, you should set "data_acces" to "in-memory" in training_params.py, and write the path to numpy files (saved using numpy.save) in "dataset_path" and "targets_path". The dataset must be an array of shape (25000, Size_X, Size_Y, Channels), and targets must be 1D (targets will be converted to 2D arrays during preprocessing). The code is going to divide the whole dataset into a trainset (17500 by default), validationset (3750), and a testset (3750). See dataset_division.py in dataset.py.
 
 How does it work ?
 

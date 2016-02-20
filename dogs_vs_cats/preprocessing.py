@@ -4,7 +4,6 @@ __author__ = 'Guillaume'
 import matplotlib.pyplot as plt
 import numpy as np
 import PIL
-import os
 import time
 from dataset import InMemoryDataset, FuelDataset
 
@@ -19,8 +18,12 @@ def remove_black_borders_from_rotation(rotated_img, angle):
     first_row = rotated_img[0]
     first_col = rotated_img[:,0]
 
-    cropx = np.argwhere(np.cumsum(first_row[::-1]!=0)==1)[0][0]
-    cropy = np.argwhere(np.cumsum(first_col!=0)==1)[0][0]
+    try:
+        cropx = np.argwhere(np.cumsum(first_row[::-1]!=0)==1)[0][0]
+        cropy = np.argwhere(np.cumsum(first_col!=0)==1)[0][0]
+    except:
+        cropx=0.2*row
+        cropy=0.2*col
 
     if cropy>(0.4*row) or cropx>(0.4*col):
         return rotated_img

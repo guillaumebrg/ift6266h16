@@ -1,7 +1,7 @@
 __author__ = 'Guillaume'
 
-import json
 import numpy as np
+import platform
 import os
 import pickle
 import time
@@ -206,24 +206,45 @@ def launch_training(training_params):
             save_history(training_params.path_out+"/MEM_%d/history.pkl"%count, history)
             count += 1
 
+def test_model_on_exp(training_params):
+    model, path_model = get_best_model_from_exp(training_params.path_out)
+    testset, testset_labels = load_dataset_in_memory_and_resize(training_params.data_access, "test", training_params.dataset_path,
+                                                                training_params.targets_path, training_params.tmp_size,
+                                                                training_params.final_size, training_params.batch_size)
+    score, loss = test_model(model, testset/training_params.scale, convert_labels(testset_labels), batch_size=training_params.batch_size, verbose=True)
+    f = open(training_params.path_out+"/testset_score.txt", "w")
+    f.writelines("%s\nTestset score = %.5f\nTestset loss = %.5f"%(path_model,score,loss))
+    f.close()
+
+
 if __name__ == "__main__":
     end = False
     mode = ""
     try:
         mode = sys.argv[1]
     except:
-        print "Expects an argument : '-train' or '-check'"
+        print "Expects an argument : '-train', '-check', '-report', or '-test'."
         end = True
 
     if end is not True:
         training_params = TrainingParams()
         if mode=="-train":
             launch_training(training_params)
+            test_model_on_exp(training_params)
+            if platform.system()=="Windows":
+                write_experiment_report(training_params.path_out, multipages=True)
+                write_experiment_report(training_params.path_out, multipages=False)
+        elif mode=="-check":
+            try:
+                n = int(sys.argv[2])
+            except:
+                n=10
+            training_params.preprocessing_args.append(n)
+            check_preprocessed_data(*training_params.preprocessing_args)
+        elif mode=="-report":
             write_experiment_report(training_params.path_out, multipages=True)
             write_experiment_report(training_params.path_out, multipages=False)
-        elif mode=="-check":
-            n = int(sys.argv[2])
-            training_params.preprocessing_args.append(n)
-            chech_preprocessed_data(*training_params.preprocessing_args)
+        elif mode=="-test":
+            test_model_on_exp(training_params)
         else:
-            print "Mode not undertstood. '-train' or '-check' are available."
+            print "Mode not undertstood. Use '-train', '-check', '-report', or '-test'. Here : %s"%mode

@@ -123,6 +123,33 @@ def timer(name):
     stop_time = time.time()
     print('\n{} took {} seconds'.format(name, stop_time - start_time))
 
+def load_dataset_in_memory_and_resize(data_access, set, dataset_path, targets_path, tmp_size, final_size, batch_size):
+    if data_access == "in-memory":
+        with timer("Loading %s data"%set):
+            dataset = InMemoryDataset(set, dataset_path,
+                                            source_targets=targets_path)
+            draw_data = np.copy(dataset.dataset)
+            targets = np.copy(dataset.targets)
+            del dataset
+    elif data_access == "fuel":
+        with timer("Loading %s data"%set):
+            dataset = FuelDataset(set, tmp_size,
+                                        batch_size=batch_size)
+            draw_data,targets = dataset.return_whole_dataset()
+            del dataset
+    else:
+        raise Exception("Data access not available. Must be 'fuel' or 'in-memory'. Here : %s."%data_access)
+
+    # Resize images from the validset
+    out = np.zeros((draw_data.shape[0], final_size[2], final_size[0],
+                         final_size[1]), dtype="float32")
+    with timer("Resizing %s images"%set):
+        for i in range(draw_data.shape[0]):
+            out[i] = resize_pil(draw_data[i], final_size[0:2]).transpose(2,0,1)
+    del draw_data
+
+    return out, targets
+
 def launch_training(training_params):
     """
     Load the data, and train a Keras model.
@@ -134,16 +161,9 @@ def launch_training(training_params):
         os.mkdir(os.path.abspath(training_params.path_out))
 
     ###### LOADING DATA #######
-    with timer("Loading validset data"):
-        draw_validset = np.load(training_params.validset)
-        valid_targets = np.load(training_params.valid_targets)
-    # Resize images from the validset
-    validset = np.zeros((training_params.Nvalid, training_params.final_size[2], training_params.final_size[0], training_params.final_size[1]),
-                        dtype="float32")
-    with timer("Resizing validset images"):
-        for i in range(training_params.Nvalid):
-            validset[i] = resize(draw_validset[i], training_params.final_size[0:2]).transpose(2,0,1)
-    del draw_validset
+    validset, valid_targets = load_dataset_in_memory_and_resize(training_params.data_access, "valid", training_params.dataset_path,
+                                                                training_params.targets_path, training_params.tmp_size,
+                                                                training_params.final_size, training_params.batch_size)
 
     ###### MODEL INITIALIZATION #######
     with timer("Model initialization"):

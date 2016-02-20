@@ -9,9 +9,11 @@ import sys
 
 from contextlib import contextmanager
 from keras.callbacks import Callback, EarlyStopping
-from preprocessing import resize, chech_preprocessed_data
+from preprocessing import resize_pil, check_preprocessed_data, convert_labels
 from reporting import write_experiment_report
 from training_params import TrainingParams
+from dataset import InMemoryDataset, FuelDataset
+from testing import get_best_model_from_exp, test_model, update_BN_params
 
 def save_history(path, history):
     """
@@ -193,10 +195,10 @@ def launch_training(training_params):
 
             history = model.fit_generator(training_params.preprocessing(*training_params.preprocessing_args),
                                           nb_epoch=training_params.nb_max_epoch,
-                                          samples_per_epoch=20000,
+                                          samples_per_epoch= training_params.Ntrain,
                                           show_accuracy=True,
                                           verbose=training_params.verbose,
-                                          validation_data=(validset/255.0,np.array(valid_targets, "float32")),
+                                          validation_data=(validset/255.0,convert_labels(valid_targets)),
                                           callbacks=[early_stoping, save_model])
 
             training_params.learning_rate *= 0.1

@@ -1,44 +1,51 @@
 __author__ = 'Guillaume'
 
-import def_model.vggnet_with_dropout as vggnet_with_dropout
+import def_model.vggnet_with_regularisation as vggnet_with_regularisation
+import os
+import platform
 
-from preprocessing import generator_from_file, rotate_crop_and_scale, resize_and_scale
+from preprocessing import images_generator, rotate_crop_and_scale, resize_and_scale
 
 class TrainingParams():
     def __init__(self):
         # Model definition
-        self.model_definition = vggnet_with_dropout
+        self.model_definition = vggnet_with_regularisation
         self.model_args = []
-        # Data processing
-        self.Ntrain = 20000
-        self.Nvalid = 5000
-        self.final_size = (150,150,1)
-        self.preprocessing = generator_from_file
-        self.preprocessing_args = ["data\\grayscale_250x250\\trainset_uint8_250x250x1.npy",
-                                   "data\\grayscale_250x250\\trainset_targets_uint8_250x250x1.npy",
-                                   (32, 1, 150, 150),
-                                   rotate_crop_and_scale,
-                                   [(150,150), 10, 5, 255.0]]
-        # self.preprocessing_args = [["data\\rgb_200x200\\trainset_uint8_200x200x3_part%d.npy"%count for count in range(4)],
-        #                            ["data\\rgb_200x200\\trainset_targets_uint8_200x200x3_part%d.npy"%count for count in range(4)],
-        #                            (32, 3, 100, 100),
-        #                            rotate_crop_and_scale,
-        #                            [(100,100), 10, 5, 255.0]]
-        self.validset = "data\\grayscale_250x250\\validset_uint8_250x250x1.npy"
-        self.valid_targets = "data\\grayscale_250x250\\validset_targets_uint8_250x250x1.npy"
         # Training parameters
         self.learning_rate = 0.01
         self.learning_rate_min = 0.0001
-        self.momentum = 0.2
+        self.momentum = 0.9
         self.max_no_best = 10
         self.nb_max_epoch = 1000
         self.verbose = 2
         self.batch_size = 32
+        # Data processing
+        self.Ntrain = 17500
+        self.Nvalid = 3750
+        self.Ntest = 3750
+        self.tmp_size = (250,250,1)
+        self.final_size = (150,150,1)
+        self.scale = 255.0
+        self.data_access = "fuel"
+        self.dataset_path = "data/grayscale_250x250/dataset_uint8_250x250x1.npy"
+        self.targets_path = "data/grayscale_250x250/targets.npy"
+        self.preprocessing = images_generator
+        self.preprocessing_args = [self.data_access,
+                                   self.dataset_path,
+                                   self.targets_path,
+                                   self.batch_size,
+                                   self.tmp_size,
+                                   self.final_size,
+                                   rotate_crop_and_scale,
+                                   [(150,150), 10, 5, self.scale]]
         # Saving dir
         self.path_out = os.path.abspath("experiments/blog_post_3_regularization/vggnet_dropout_0.7")
 
         # Update arguments of the initialize the model
         self.update_model_args()
+        if platform.system()=="Linux":
+            self.data_access = "fuel"
+
 
     def wrapper(self, func, args):
         return func(*args)
@@ -63,8 +70,8 @@ class TrainingParams():
             except:
                 args += "???, "
         s += "\n\t with args : %s"%args
-        s += "\n\t Validset location : %s"%self.validset
-        s += "\n\t Valid targets location : %s"%self.valid_targets
+        s += "\n\t Dataset : %s"%self.dataset_path
+        s += "\n\t Targets : %s"%self.targets_path
         s += "\n\nTraining parameters :"
         s += "\n\t Learning rate : %.5f"%(self.learning_rate)
         s += "\n\t Learning rate lower bound : %.5f"%(self.learning_rate_min)

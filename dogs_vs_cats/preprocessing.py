@@ -6,6 +6,7 @@ import numpy as np
 import PIL
 import os
 import time
+from dataset import InMemoryDataset, FuelDataset
 
 def remove_black_borders_from_rotation(rotated_img, angle):
 
@@ -150,9 +151,43 @@ def generator_from_file(file, file_target, batch_size, preprocessing_func, prepr
 
         del trainset, targets, batch, batch_targets
 
+def images_generator(data_access, dataset, targets, batch_size, tmp_size, final_size, preprocessing_func, preprocessing_args):
+    """
+    Generator function used when using the keras function 'fit_on_generator'. Can work with InMemoryDataset, FuelDataset.
+    Yield a tuple to the training containing a processed batch and
+    targets. This can be done on the CPU, in parallel of a GPU training. See 'fit_on_generator' for more details.
+
+    :param data_access: "in-memory" or "fuel"
+    :param dataset: path to the dataset numpy file (not used when data_acces = "fuel")
+    :param targets: path to the targets numpy file (not used when data_acces = "fuel")
+    :param batch_size:
+    :param tmp_size: Used when data_access == "fuel". Datastream will return images of size equal to tmp_size.
+    :param final_size: size of images used for the training
+    :param preprocessing_func: function which will be applied to each training batch
+    :param preprocessing_args: arguments of the preprocessing function
+    :return: tuple(batch,targets)
+    """
+    if data_access=="in-memory":
+        train_dataset = InMemoryDataset("train", source=dataset, batch_size=batch_size, source_targets=targets)
+    elif data_access=="fuel":
+        train_dataset = FuelDataset("train", tmp_size, batch_size=batch_size)
+    else:
+        raise Exception("Data access not available. Must be 'fuel' or 'in-memory'. Here : %s."%data_access)
+    while 1:
+        # Get next batch
+        batch,batch_targets = train_dataset.get_batch()
+        # Pre-processing
+        processed_batch = np.zeros((batch.shape[0],final_size[2],final_size[0],final_size[1]),
+                                   dtype="float32")
+        for k in range(batch_size):
+            processed_batch[k] = preprocessing_func(batch[k], *preprocessing_args).transpose(2,0,1)
+        # Send Batch
+        labels = convert_labels(batch_targets)
+        yield processed_batch,labels
+
 def generator_from_files(files, files_targets, batch_size, preprocessing_func, preprocessing_args):
     """
-    Generator function used when using the keras function 'fit_on_generator'. Load the trainset as a numpy
+    Generator function used when using the keras function 'fit_on_generator'. Load the trainset as a np
     array, and the corresponding targets, and returns a tuple to the training containing a processed batch and
     targets. This can be done on the CPU, in parallel of a GPU training. See 'fit_on_generator' for more details.
 
@@ -185,42 +220,35 @@ def generator_from_files(files, files_targets, batch_size, preprocessing_func, p
         del trainset, targets, batch, batch_targets
 
 
-def chech_preprocessed_data(file, file_target, batch_size, preprocessing_func, preprocessing_args, debug=None):
-    if type(file) is list:
-        # Loading data
-        trainset = np.load(file[0])
-        targets = np.load(file_target[0])
+def check_preprocessed_data(data_access, dataset, targets, batch_size, tmp_size, final_size, preprocessing_func,
+                            preprocessing_args, n=10):
+    if data_access=="in-memory":
+        train_dataset = InMemoryDataset("train", source=dataset, batch_size=batch_size, source_targets=targets)
+    elif data_access=="fuel":
+        train_dataset = FuelDataset("train", tmp_size, batch_size=batch_size)
     else:
-        # Loading data
-        trainset = np.load(file)
-        targets = np.load(file_target)
-    # Shuffling
-    index = np.arange(0,trainset.shape[0],1)
-    np.random.shuffle(index)
-    trainset = trainset[index]
-    targets = targets[index]
+        raise Exception("Data access not available. Must be 'fuel' or 'in-memory'. Here : %s."%data_access)
+
     # Compute only one batch
-    batch = np.zeros(batch_size, dtype="float32")
     start=time.time()
-    for k in range(batch_size[0]):
-        batch[k] = preprocessing_func(trainset[k], *preprocessing_args).transpose(2,0,1)
-    batch_targets = targets[0:batch_size[0]]
+    batch,batch_targets = train_dataset.get_batch()
+    batch_targets = convert_labels(batch_targets)
+    processed_batch = np.zeros((batch.shape[0],final_size[2],final_size[0],final_size[1]),
+                                   dtype="float32")
+    for k in range(batch_size):
+        processed_batch[k] = preprocessing_func(batch[k], *preprocessing_args).transpose(2,0,1)
     end=time.time()
-    try:
-        n = int(debug)
-    except:
-        n = 10
+
+    print "Batch Shape = ", processed_batch.shape, "with dtype =", processed_batch.dtype
+    print "Targets Shape =", batch_targets.shape, "with dtype =", batch_targets.dtype
     for i in range(n):
         plt.figure(0)
         plt.gray()
         plt.clf()
-        plt.title("(%d,%d)"%(batch_targets[i][0],batch_targets[i][1]))
+        plt.title("(%d,%d)"%(batch_targets[i][0], batch_targets[i][1]))
         if batch.shape[1]==3:
-            plt.imshow(batch[i].transpose(1,2,0))
+            plt.imshow(processed_batch[i].transpose(1,2,0))
         else:
-            plt.imshow(batch[i,0])
+            plt.imshow(processed_batch[i,0])
         plt.show()
     print "Processing 1 batch took : %.5f"%(end-start)
-
-
-    del trainset, targets, batch, batch_targets

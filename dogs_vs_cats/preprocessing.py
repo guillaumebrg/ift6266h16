@@ -1,6 +1,6 @@
 __author__ = 'Guillaume'
 
-import cv2 # OpenCV
+#import cv2 # OpenCV
 import matplotlib.pyplot as plt
 import numpy as np
 import PIL
@@ -45,32 +45,40 @@ def rotate(img, angle):
         pil_img = PIL.Image.fromarray(img)
     return np.array(pil_img.rotate(angle), dtype=img.dtype).reshape(img.shape)
 
-def resize(img, size, interpolation = cv2.INTER_CUBIC):
-    if img.ndim == 2:
-        return cv2.resize(img, size, interpolation = interpolation)
+def resize_pil(img, size, interpolation = PIL.Image.BICUBIC):
+    if img.ndim == 3:
+        if img.shape[2]==1:
+            pil_img = PIL.Image.fromarray(img[:,:,0])
+            return np.array(pil_img.resize(size, interpolation), dtype=img.dtype)[:,:,None]
     else:
-        if img.shape[2] == 3:
-            return cv2.resize(img, size, interpolation = interpolation)
-        else:
-            return cv2.resize(img, size, interpolation = interpolation)[:,:,None]
+        pil_img = PIL.Image.fromarray(img)
+        return np.array(pil_img.resize(size, interpolation), dtype=img.dtype)
 
-def resize_and_scale(img, size, scale, interpolation = cv2.INTER_CUBIC):
-    img = resize(img, size, interpolation)
+# def resize_cv2(img, size, interpolation = cv2.INTER_CUBIC):
+#     if img.ndim == 2:
+#         return cv2.resize(img, size, interpolation = interpolation)
+#     else:
+#         if img.shape[2] == 3:
+#             return cv2.resize(img, size, interpolation = interpolation)
+#         else:
+#             return cv2.resize(img, size, interpolation = interpolation)[:,:,None]
+
+def resize_and_scale(img, size, scale, interpolation = PIL.Image.BICUBIC):
+    img = resize_pil(img, size, interpolation)
     return np.array(img, "float32")/scale
 
-def translate(img, tx, ty):
-    if img.ndim > 2:
-        print "Rotate only works for gray image."
-    rows,cols = img.shape
-    M = np.float32([[1,0,tx],[0,1,ty]])
-    return cv2.warpAffine(img,M,(cols,rows))
+# def translate(img, tx, ty):
+#     if img.ndim > 2:
+#         print "Rotate only works for gray image."
+#     rows,cols = img.shape
+#     M = np.float32([[1,0,tx],[0,1,ty]])
+#     return cv2.warpAffine(img,M,(cols,rows))
 
 def add_channel(img):
     return img[None,:,:]
 
 def convert_to_grayscale(img):
-    #return PIL.Image.fromarray(img).convert("L")
-    return cv2.cvtColor( img, cv2.COLOR_RGB2GRAY )
+    return PIL.Image.fromarray(img).convert("L")
 
 def crop(img, crop_rates):
     rows,cols = img.shape[0:2]
@@ -91,7 +99,7 @@ def rotate_crop_and_scale(img, final_size, max_angle, max_crop_rate, scale):
     crop_rates = np.random.randint(0, max_crop_rate, 4) # translation rates
     cropped_im = crop(cropped_rotated_img, crop_rates)
     # Resize and scale
-    resized_img = resize_and_scale(cropped_im, final_size, scale, interpolation=cv2.INTER_CUBIC)
+    resized_img = resize_and_scale(cropped_im, final_size, scale, interpolation=PIL.Image.BICUBIC)
     # Flip left right
     if np.random.randint(0,2)==1:
         resized_img = np.fliplr(resized_img)

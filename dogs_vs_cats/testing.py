@@ -67,16 +67,14 @@ def test_model(model, dataset, labels, batch_size=32, return_preds=False, verbos
     else:
         return score, test_loss
 
-def update_BN_params(model, dataset, batch_size, scale=1.0, N=100, verbose=False):
+def update_BN_params(model, dataset, batch_size, shuffle=True, eps=1e-06, verbose=False):
     # Get the names of each layer
     names_layers = [l.name for l in model.layers]
     # Find BN layers
     check_BN = np.array([name.find('batchnormalization') for name in names_layers])
-    BN_positions = np.argwhere(check_BN>-1)
-    BN_positions = list(BN_positions.flatten())
-    print BN_positions
+    BN_positions = np.argwhere(check_BN==0)
     if verbose:
-        print "%d BN layers found."%len(BN_positions)
+        print "%d BN layers found."%BN_positions.shape[0]
     # If no BN, return
     if not BN_positions:
         return
@@ -91,40 +89,27 @@ def update_BN_params(model, dataset, batch_size, scale=1.0, N=100, verbose=False
         # Create a function able to get intermediate results
         intermediate_output = K.function([model.layers[0].input],
                                   [previous_BN_layer.get_output(train=False)])
-        # Get the shape of mean and std (taken from Keras Batch normalization code)
-        input_shape = BN_layer.input_shape
-        reduction_axes = list(range(len(input_shape)))
-        del reduction_axes[BN_layer.axis]
-        broadcast_shape = [1] * len(input_shape)
-        broadcast_shape[BN_layer.axis] = input_shape[BN_layer.axis]
-        # Initiate new mean and std
-        new_mean = np.zeros(broadcast_shape, "float32").flatten()
-        new_std = np.zeros(broadcast_shape, "float32").flatten()
+        new_mean = 0
+        new_std = 0
         # First, shuffle the dataset
-        count = 0.0
+        index = np.arange(0, dataset.shape[0], 1)
+        np.random.shuffle(index)
+        count = 0
         # Then, compute new mean and new std
-        for i in range(N):
-            # Batch processing (taken from Keras Batch normalization code)
-            batch = dataset.get_batch()[0]/scale
-            out = intermediate_output([batch.transpose(0,3,1,2)])[0]
-            m = mean_with_list_axis(out, reduction_axes)
-            std = mean_with_list_axis(np.square(out-m.reshape(broadcast_shape)) + BN_layer.epsilon, reduction_axes)
-            std = np.sqrt(std)
-            # Statistics accumulation
-            new_mean += m
-            new_std += std
-            count += 1.0
+        for i in range(dataset.shape[0]/batch_size):
+            batch = dataset[index[i*batch_size:((i+1)*batch_size)]].transpose(0,3,1,2)
+            out = intermediate_output([batch])[0]
+            out = out.reshape(out.shape[0:2])
+            new_mean += out.mean(axis=0)
+            new_std += out.std(axis=0)
+            count +=1
             if verbose:
                 print "\r%d processed examples..."%(batch_size*i),
         # Averaging
         new_mean /= count
-        new_std = new_std/count # Adding eps in order to avoid 0 division
+        new_std = new_std/count + eps # Adding eps in order to avoid 0 division
         # Setting new weights
-        print new_mean[0]
-        print weights[2][0]
         weights[2]=new_mean
-        print new_std[0]
-        print weights[3][0]
         weights[3]=new_std
         BN_layer.set_weights(np.array(weights, "float32"))
     if verbose:
@@ -171,10 +156,5 @@ def apply_detection(imgs, model_detect, activation="softmax", blur=True, sigma=1
     return preds
 
 
-def mean_with_list_axis(a, ax):
-    out = np.mean(a, axis=ax[-1])
-    if len(ax)>1:
-        for i in ax[::-1][1:]:
-            out = np.mean(out, axis=i)
-    return out
+
 

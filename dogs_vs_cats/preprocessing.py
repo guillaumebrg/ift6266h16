@@ -42,16 +42,18 @@ def remove_black_borders_from_translation(translated_img, tx, ty):
     return translated_img[up:down, left:right]
 
 def rotate(img, angle):
-    if img.ndim == 3 and img.shape[2]==1:
-        pil_img = PIL.Image.fromarray(img[:,:,0])
+    if img.ndim == 3:
+        if img.shape[2]==1:
+            pil_img = PIL.Image.fromarray(img[:,:,0])
     else:
         pil_img = PIL.Image.fromarray(img)
     return np.array(pil_img.rotate(angle), dtype=img.dtype).reshape(img.shape)
 
 def resize_pil(img, size, interpolation = PIL.Image.BICUBIC):
-    if img.ndim == 3 and img.shape[2]==1:
-        pil_img = PIL.Image.fromarray(img[:,:,0])
-        return np.array(pil_img.resize(size, interpolation), dtype=img.dtype)[:,:,None]
+    if img.ndim == 3:
+        if img.shape[2]==1:
+            pil_img = PIL.Image.fromarray(img[:,:,0])
+            return np.array(pil_img.resize(size, interpolation), dtype=img.dtype)[:,:,None]
     else:
         pil_img = PIL.Image.fromarray(img)
         return np.array(pil_img.resize(size, interpolation), dtype=img.dtype)
@@ -120,8 +122,39 @@ def convert_labels(labels_1D):
     targets[:,1] = 1-labels_1D.flatten()
     return np.array(targets, "float32")
 
-def images_generator(data_access, dataset, targets, batch_size, tmp_size, final_size, bagging_size, bagging_iterator,
-                     preprocessing_func, preprocessing_args):
+def generator_from_file(file, file_target, batch_size, preprocessing_func, preprocessing_args):
+    """
+    Generator function used when using the keras function 'fit_on_generator'. Load the trainset as a numpy
+    array, and the corresponding targets, and returns a tuple to the training containing a processed batch and
+    targets. This can be done on the CPU, in parallel of a GPU training. See 'fit_on_generator' for more details.
+
+    :param file: path to training data
+    :param file_target: path to training targets
+    :param batch_size:
+    :param preprocessing_func: function which will be applied to each training batch
+    :param preprocessing_args: arguments of the preprocessing function
+    :return: tuple(batch,targets)
+    """
+    while 1:
+        trainset = np.load(file)
+        targets = np.load(file_target)
+        # Shuffling
+        index = np.arange(0,trainset.shape[0],1)
+        np.random.shuffle(index)
+        trainset = trainset[index]
+        targets = targets[index]
+        # Batch loop
+        for i in range(trainset.shape[0]/batch_size[0])[0:-1]:
+            batch = np.zeros(batch_size, dtype="float32")
+            for k in range(batch_size[0]):
+                batch[k] = preprocessing_func(trainset[i*batch_size[0]+k], *preprocessing_args).transpose(2,0,1)
+            batch_targets = targets[i*batch_size[0]:((i+1)*batch_size[0])]
+
+            yield batch, batch_targets
+
+        del trainset, targets, batch, batch_targets
+
+def images_generator(data_access, dataset, targets, batch_size, tmp_size, final_size, preprocessing_func, preprocessing_args):
     """
     Generator function used when using the keras function 'fit_on_generator'. Can work with InMemoryDataset, FuelDataset.
     Yield a tuple to the training containing a processed batch and
@@ -140,8 +173,7 @@ def images_generator(data_access, dataset, targets, batch_size, tmp_size, final_
     if data_access=="in-memory":
         train_dataset = InMemoryDataset("train", source=dataset, batch_size=batch_size, source_targets=targets)
     elif data_access=="fuel":
-        train_dataset = FuelDataset("train", tmp_size, batch_size=batch_size, bagging=bagging_size,
-                                    bagging_iterator=bagging_iterator)
+        train_dataset = FuelDataset("train", tmp_size, batch_size=batch_size)
     else:
         raise Exception("Data access not available. Must be 'fuel' or 'in-memory'. Here : %s."%data_access)
     while 1:
@@ -155,6 +187,40 @@ def images_generator(data_access, dataset, targets, batch_size, tmp_size, final_
         # Send Batch
         labels = convert_labels(batch_targets)
         yield processed_batch,labels
+
+def generator_from_files(files, files_targets, batch_size, preprocessing_func, preprocessing_args):
+    """
+    Generator function used when using the keras function 'fit_on_generator'. Load the trainset as a np
+    array, and the corresponding targets, and returns a tuple to the training containing a processed batch and
+    targets. This can be done on the CPU, in parallel of a GPU training. See 'fit_on_generator' for more details.
+
+    :param file: path to training data
+    :param file_target: path to training targets
+    :param batch_size:
+    :param preprocessing_func: function which will be applied to each training batch
+    :param preprocessing_args: arguments of the preprocessing function
+    :return: tuple(batch,targets)
+    """
+    while 1:
+        for file,file_targets in zip(files, files_targets):
+            # Loading data
+            trainset = np.load(file)
+            targets = np.load(file_targets)
+            # Shuffling
+            index = np.arange(0,trainset.shape[0],1)
+            np.random.shuffle(index)
+            trainset = trainset[index]
+            targets = targets[index]
+            # Batch loop
+            for i in range(trainset.shape[0]/batch_size[0])[0:-1]:
+                batch = np.zeros(batch_size, dtype="float32")
+                for k in range(batch_size[0]):
+                    batch[k] = preprocessing_func(trainset[i*batch_size[0]+k], *preprocessing_args).transpose(2,0,1)
+                batch_targets = targets[i*batch_size[0]:((i+1)*batch_size[0])]
+
+                yield batch, batch_targets
+
+        del trainset, targets, batch, batch_targets
 
 
 def check_preprocessed_data(data_access, dataset, targets, batch_size, tmp_size, final_size, preprocessing_func,

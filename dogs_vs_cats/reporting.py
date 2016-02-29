@@ -130,7 +130,14 @@ def autolabel(ax, rects):
                 '%.3f' % height,
                 ha='center', va='bottom')
 
-def get_acc_and_loss(path_to_experiment, subdir_names="MEM", history_files_name="history.pkl"):
+def draw_experiment_figures(path_to_experiment, subdir_names="MEM", history_files_name="history.pkl", pdf=None,
+                            multifigures=False):
+    """
+    Function that take as an input the path to an experiment folder, and extract from it main results: training curves,
+    performances in terms of loss and accuracy will be shown in a recap figure. This function expects a Keras training
+    using the 'ModelCheckpoint_perso' class to save models.
+    """
+    # Get sub directories : this works only with sub dir called "MEMxxx"
     expe_list = os.listdir(path_to_experiment)
     expe_list = [path_to_experiment+"/"+dir_ for dir_ in expe_list if dir_.find(subdir_names)==0]
     # Open history.pkl files
@@ -144,17 +151,6 @@ def get_acc_and_loss(path_to_experiment, subdir_names="MEM", history_files_name=
             valid_loss.append(pickle.load(f))
             train_acc.append(pickle.load(f))
             valid_acc.append(pickle.load(f))
-    return train_loss, valid_loss, train_acc, valid_acc
-
-def draw_experiment_figures(path_to_experiment, subdir_names="MEM", history_files_name="history.pkl", pdf=None,
-                            multifigures=False):
-    """
-    Function that take as an input the path to an experiment folder, and extract from it main results: training curves,
-    performances in terms of loss and accuracy will be shown in a recap figure. This function expects a Keras training
-    using the 'ModelCheckpoint_perso' class to save models.
-    """
-    # Get sub directories : this works only with sub dir called "MEMxxx"
-    train_loss, valid_loss, train_acc, valid_acc = get_acc_and_loss(path_to_experiment, subdir_names, history_files_name)
     # Concatenate those list
     # Loss
     train_loss_concat = np.concatenate(train_loss)

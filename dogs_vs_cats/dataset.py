@@ -72,18 +72,14 @@ class InMemoryDataset(Dataset):
             s = slice(self.iterator*self.batch_size+self.offset, ((self.iterator+1)*self.batch_size)+self.offset)
             batch = self.dataset[self.index[s]]
             batch_targets = self.targets[self.index[s]]
+            self.current_batch = (batch, batch_targets)
+            self.iterator += 1
         else: # end epoch
-            s = slice(self.iterator*self.batch_size+self.offset,self.dataset.shape[0])
-            batch = self.dataset[self.index[s]]
-            batch_targets = self.targets[self.index[s]]
-            self.iterator = 0
-            self.offset = self.batch_size - len(s)
             self.on_new_epoch()
-            s = slice(0,self.offset)
-            batch = np.hstack((batch, self.dataset[self.index[s]]))
-            batch_targets = np.hstack((batch_targets, self.targets[self.index[s]]))
-        self.current_batch = (batch, batch_targets)
-        self.iterator += 1
+            self.iterator = 0
+            self.next_batch()
+
+
 
 class FuelDataset(Dataset):
     def __init__(self, mode, tmp_size, source="image_features", batch_size=1, source_targets=None, shuffle=True):

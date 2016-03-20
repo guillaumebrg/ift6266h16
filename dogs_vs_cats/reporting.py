@@ -8,6 +8,48 @@ from matplotlib.backends.backend_pdf import PdfPages
 from keras.models import model_from_json
 from preprocessing import resize_and_scale
 
+def print_architecture(model, path_out=None):
+    if path_out is not None:
+        f = open(path_out, "w")
+    layers = model.layers
+    activation_pos = [i for i in np.arange(1,len(layers)) if layers[i].name=="activation"]
+    s = "Achitecture :"
+    s += "\n\n\tDepth = %d"%len(activation_pos)
+    print s
+    if path_out is not None:
+        f.writelines(s)
+
+    count = 0
+    for i,NL_pos in enumerate(activation_pos):
+        s = "\n\tLayer %d :"%(i+1)
+        for j in range(NL_pos-count+1):
+            #if count == 0:
+            #    s += "\n\t\tInput shape : " + str(layers[0].input_shape)
+            name = layers[count].name
+            if name == "convolution2d":
+                s += "\n\t\t%s : %d input maps, filters : %dx%d, %d output maps"%(name, layers[count].W_shape[1],
+                                                                                layers[count].W_shape[2],
+                                                                                layers[count].W_shape[3],
+                                                                                layers[count].W_shape[0])
+            elif name == "zeropadding2d":
+                s += "\n\t\t%s : %s"%(name, str(layers[count].padding))
+            elif name == "activation":
+                s += "\n\t\t%s : %s"%(name, layers[count].get_config()['activation'])
+            elif name == "dense":
+                s += "\n\t\t%s : %d neurons"%(name, layers[count].output_shape[1])
+            else:
+                s += "\n\t\t" + name
+            count += 1
+        if count < len(layers):
+            if layers[count].name == "maxpooling2d":
+                s += "\n\n\t### (%d,%d) maxpooling2d ###\n"%(layers[count].pool_size[0], layers[count].pool_size[1])
+                count += 1
+        if path_out is not None:
+            f.writelines(s)
+        print s
+    if path_out is not None:
+        f.close()
+
 def draw_train_and_valid_curves(train_points, valid_points, learning_rate_updates_epoch, best_per_lr, mode="loss",
                                 fignumber=0, pdf=None):
     """

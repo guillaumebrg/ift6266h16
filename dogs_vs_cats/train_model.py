@@ -9,11 +9,13 @@ import sys
 
 from contextlib import contextmanager
 from keras.callbacks import Callback, EarlyStopping
-from preprocessing import resize_pil, check_preprocessed_data, convert_labels
-from reporting import write_experiment_report
+import keras.backend as K
+from preprocessing import resize_pil, check_preprocessed_data, convert_labels, standardize_dataset, preprocess_dataset, \
+    get_next_batch
+from reporting import write_experiment_report, print_architecture
 from training_params import TrainingParams
 from dataset import InMemoryDataset, FuelDataset
-from testing import get_best_model_from_exp, test_model, update_BN_params
+from testing import get_best_model_from_exp, test_model, update_BN_params, adapt_to_new_input, categorical_crossentropy
 
 def save_history(path, history):
     """
@@ -128,29 +130,28 @@ def timer(name):
 def load_dataset_in_memory_and_resize(data_access, set, dataset_path, targets_path, tmp_size, final_size, batch_size):
     if data_access == "in-memory":
         with timer("Loading %s data"%set):
-            dataset = InMemoryDataset(set, dataset_path,
-                                            source_targets=targets_path)
+            dataset = InMemoryDataset(set, dataset_path, source_targets=targets_path)
             draw_data = np.copy(dataset.dataset)
             targets = np.copy(dataset.targets)
             del dataset
     elif data_access == "fuel":
         with timer("Loading %s data"%set):
-            dataset = FuelDataset(set, tmp_size,
-                                        batch_size=batch_size)
+            dataset = FuelDataset(set, tmp_size, batch_size=batch_size, shuffle=False)
             draw_data,targets = dataset.return_whole_dataset()
             del dataset
     else:
         raise Exception("Data access not available. Must be 'fuel' or 'in-memory'. Here : %s."%data_access)
 
-    # Resize images from the validset
-    out = np.zeros((draw_data.shape[0], final_size[2], final_size[0],
-                         final_size[1]), dtype="float32")
-    with timer("Resizing %s images"%set):
-        for i in range(draw_data.shape[0]):
-            out[i] = resize_pil(draw_data[i], final_size[0:2]).transpose(2,0,1)
-    del draw_data
-
-    return out, targets
+    if tmp_size != final_size:
+        # Resize images from the validset
+        out = np.zeros((draw_data.shape[0], final_size[0], final_size[1], final_size[2]), dtype="float32")
+        with timer("Resizing %s images"%set):
+            for i in range(draw_data.shape[0]):
+                out[i] = resize_pil(draw_data[i], final_size[0:2])
+        del draw_data
+        return out, targets
+    else:
+        return draw_data, targets
 
 def launch_training(training_params):
     """
@@ -164,12 +165,34 @@ def launch_training(training_params):
 
     ###### LOADING DATA #######
     validset, valid_targets = load_dataset_in_memory_and_resize(training_params.data_access, "valid", training_params.dataset_path,
-                                                                training_params.targets_path, training_params.tmp_size,
-                                                                training_params.final_size, training_params.batch_size)
+                                                                training_params.targets_path, training_params.final_size,
+                                                                training_params.final_size, training_params.test_batch_size)
+    valid_targets = convert_labels(valid_targets)
+
+    ###### Preprocessing VALIDATION DATA #######
+    for mode in training_params.valid_preprocessing:
+        validset = preprocess_dataset(validset, training_params, mode)
+    # Transpose validset >> (N, channel, X, Y)
+    validset = validset.transpose(0,3,1,2)
+    # Multiple input ?
+    if training_params.multiple_inputs>1:
+        validset = [validset for i in range(training_params.multiple_inputs)]
 
     ###### MODEL INITIALIZATION #######
     with timer("Model initialization"):
         model = training_params.initialize_model()
+    if training_params.pretrained_model is not None:
+        with timer("Pretrained Model initialization"):
+            pretrained_model = training_params.initialize_pretrained_model()
+            training_params.generator_args.append(pretrained_model)
+            # preprocessed the validset
+            if type(pretrained_model) is list:
+                features = []
+                for pmodel in pretrained_model:
+                    features.append(pmodel.predict(validset))
+                validset = np.concatenate(features, axis=1)
+            else:
+                validset = pretrained_model.predict(validset)
 
     ###### SAVE PARAMS ######
     s = training_params.print_params()
@@ -178,6 +201,8 @@ def launch_training(training_params):
     f.writelines(" ".join(sys.argv))
     f.writelines(s)
     f.close()
+    # Print architecture
+    print_architecture(model, path_out=training_params.path_out + "/architecture.txt")
 
     ###### TRAINING LOOP #######
     count = training_params.fine_tuning
@@ -193,12 +218,12 @@ def launch_training(training_params):
             save_model = ModelCheckpoint_perso(filepath=training_params.path_out+"/MEM_%d"%count, verbose=1,
                                                optional_string=s, monitor="val_acc", mode="acc")
 
-            history = model.fit_generator(training_params.preprocessing(*training_params.preprocessing_args),
+            history = model.fit_generator(training_params.generator(*training_params.generator_args),
                                           nb_epoch=training_params.nb_max_epoch,
-                                          samples_per_epoch= int(training_params.Ntrain*training_params.bagging_size),
+                                          samples_per_epoch= int(training_params.Ntrain*training_params.bagging_size)/5,
                                           show_accuracy=True,
                                           verbose=training_params.verbose,
-                                          validation_data=(validset/255.0,convert_labels(valid_targets)),
+                                          validation_data=(validset,  valid_targets),
                                           callbacks=[early_stoping, save_model])
 
             training_params.learning_rate *= 0.1
@@ -210,29 +235,69 @@ def test_model_on_exp(training_params, testset=None, labels=None, verbose=False,
                       return_testset=False):
     # Get the best model
     model, path_model = get_best_model_from_exp(training_params.path_out)
-    if testset is None or labels is None:
-        # If not given, get the testset
-        testset, testset_labels = load_dataset_in_memory_and_resize(training_params.data_access, "test",
-                                                                    training_params.dataset_path,
-                                                                    training_params.targets_path,
-                                                                    training_params.tmp_size,
-                                                                    training_params.final_size,
-                                                                    training_params.batch_size)
-        labels = convert_labels(testset_labels)
-    # Predictions on the draw testset
-    score, loss, preds = test_model(model, testset/training_params.scale, labels,
-                             batch_size=training_params.batch_size, verbose=verbose, return_preds=True)
-    # Predictions on the flipped testset
-    for i, im in enumerate(testset):
-        testset[i]= np.fliplr(im.transpose(1,2,0)).transpose(2,0,1)
-    flipped_score, flipped_loss, flipped_preds = test_model(model, testset/training_params.scale, labels,
-                                             batch_size=training_params.batch_size, verbose=verbose, return_preds=True)
+    initial_input_shape = model.input_shape
+    print "\n" + path_model
+    k = 0
+    lines = []
+    for test_size in training_params.test_sizes:
+        if verbose:
+            s = "\nTesting for size :" + str(test_size)
+            print s
+            lines.append(s)
+        # Get the best model
+        if test_size[0] != model.input_shape[2] or test_size[1] != model.input_shape[3]:
+            new_model = adapt_to_new_input(model, (test_size[2],test_size[0],test_size[1]), initial_input_shape[1:],
+                                           verbose=True)
+        else:
+            new_model = model
+        # if testset is None or labels is None:
+        #     # If not given, get the testset
+        #     testset, testset_labels = load_dataset_in_memory_and_resize(training_params.data_access, "test",
+        #                                                                 training_params.dataset_path,
+        #                                                                 training_params.targets_path,
+        #                                                                 test_size,
+        #                                                                 test_size,
+        #                                                                 training_params.batch_size)
+        #     labels = convert_labels(testset_labels)
+        # if testset.shape[2:4]!=test_size[0:2]:
+        #     new_testset = np.zeros((testset.shape[0], test_size[2], test_size[0], test_size[1]), dtype="float32")
+        #     with timer("Resizing %s images"%set):
+        #         for i in range(testset.shape[0]):
+        #             new_testset[i] = resize_pil(testset[i], testset[0:2]).transpose(2,0,1)
+        #     testset = np.copy(new_testset)
+        #     del new_testset
+        testset = FuelDataset("test", test_size, batch_size=training_params.test_batch_size, shuffle=False)
+        # # Input normalization
+        # if training_params.valid_preprocessing == "scale":
+        #     testset = testset / training_params.scale
+        # if training_params.valid_preprocessing == "std":
+        #     testset = standardize_dataset(testset, [1,2,3])
+        # Predictions on the draw testset
+        score, loss, preds, labels  = test_model(new_model, testset, training_params,
+                                                 flip=False, verbose=verbose, return_preds=True)
+        if write_txt_file:
+            lines.append("\n\tDraw testset score = %.5f\n\tDraw testset loss = %.5f"%(score,loss))
+        if k == 0:
+            final_preds = np.copy(preds)
+        else:
+            final_preds += preds
+        k+=1.0
+        # Predictions on the flipped testset
+        flipped_score, flipped_loss, flipped_preds, labels = test_model(new_model, testset, training_params,
+                                                                        flip=True, verbose=verbose, return_preds=True)
+        if write_txt_file:
+            lines.append("\n\tFlipped testset score = %.5f\n\tFlipped testset loss = %.5f"%(flipped_score,flipped_loss))
+        final_preds += flipped_preds
+        k+=1.0
+
     # Arithmetic averaging of predictions
-    final_preds_arithm = (preds+flipped_preds)/2.0
+    final_preds_arithm = final_preds/k
     count = np.sum(np.argmax(labels, axis=1) - np.argmax(final_preds_arithm, axis=1) == 0)
     final_score_arithm = float(count)/labels.shape[0]
     if verbose:
-        print "Final score (arithm) =%.5f"%final_score_arithm
+        s = "\nFinal score (arithm) =%.5f"%final_score_arithm
+        print s
+        lines.append(s)
     # Geometric fusion
     # final_preds_geom = np.sqrt(preds*flipped_preds)
     # count = np.sum(np.argmax(labels, axis=1) - np.argmax(final_preds_geom, axis=1) == 0)
@@ -242,16 +307,12 @@ def test_model_on_exp(training_params, testset=None, labels=None, verbose=False,
 
     if write_txt_file:
         f = open(training_params.path_out+"/testset_score.txt", "w")
-        f.writelines("%s\nDraw testset score = %.5f\nDraw testset loss = %.5f"%(path_model,score,loss))
-        f.writelines("\nFlipped testset score = %.5f\nFlipped testset loss = %.5f"%(flipped_score,flipped_loss))
-        f.writelines("\nFinal testset score (arithm) = %.5f"%(final_score_arithm))
-        #f.writelines("\nFinal testset score (geom) = %.5f"%(final_score_geom))
+        for line in lines:
+            f.writelines(line)
         f.close()
 
-    if return_testset:
-        return final_preds_arithm, final_score_arithm, testset, labels
-    else:
-        return final_preds_arithm, final_score_arithm
+    return final_preds_arithm, final_score_arithm, labels
+
 
 def test_ensemble_of_models(training_params, path_out=os.path.abspath("experiments/ensemble_of_models.txt"),
                             write_txt=True, verbose=True):
@@ -260,15 +321,10 @@ def test_ensemble_of_models(training_params, path_out=os.path.abspath("experimen
     for i,path in enumerate(training_params.ensemble_models):
         # For each model, get the predictions
         training_params.path_out = path
-        if i == 0:
-            # Get the predictions and the testset
-            model_preds, model_score, testset, labels = test_model_on_exp(training_params, verbose=False,
-                                                                          write_txt_file=False,
-                                                                          return_testset=True)
-        else:
-            # Get predictions, No need to get the testset
-            model_preds, model_score = test_model_on_exp(training_params, testset, labels,
-                                                         verbose=False, write_txt_file=False, return_testset=False)
+        # Get predictions, No need to get the testset
+        model_preds, model_score, labels = test_model_on_exp(training_params,
+                                                             verbose=verbose, write_txt_file=False)
+        training_params.test_sizes = [(270,270,3), (210,210,3)]
         # Accumulate predictions and scores
         predictions.append(model_preds)
         scores.append(model_score)
@@ -303,7 +359,15 @@ if __name__ == "__main__":
         if mode=="-train":
             for i in range(training_params.multiple_training):
                 launch_training(training_params)
-                test_model_on_exp(training_params)
+                test_model_on_exp(training_params, verbose=True, write_txt_file=True)
+                if platform.system()=="Windows":
+                    write_experiment_report(training_params.path_out, multipages=True)
+                    write_experiment_report(training_params.path_out, multipages=False)
+                training_params.update_params_for_next_training()
+        if mode=="-adversarial":
+            for i in range(training_params.multiple_training):
+                launch_adversarial_training(training_params)
+                test_model_on_exp(training_params, verbose=True, write_txt_file=True)
                 if platform.system()=="Windows":
                     write_experiment_report(training_params.path_out, multipages=True)
                     write_experiment_report(training_params.path_out, multipages=False)
@@ -313,8 +377,15 @@ if __name__ == "__main__":
                 n = int(sys.argv[2])
             except:
                 n=10
-            training_params.preprocessing_args.append(n)
-            check_preprocessed_data(*training_params.preprocessing_args)
+            check_preprocessed_data(training_params.data_access,
+                                    training_params.dataset_path,
+                                    training_params.targets_path,
+                                    training_params.batch_size,
+                                    training_params.tmp_size,
+                                    training_params.final_size,
+                                    training_params.preprocessing_func,
+                                    training_params.preprocessing_args,
+                                    n=n)
         elif mode=="-report":
             write_experiment_report(training_params.path_out, multipages=True)
             write_experiment_report(training_params.path_out, multipages=False)

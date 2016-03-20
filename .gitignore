@@ -45,5 +45,6 @@ Temporary Items
 # Experiment directory
 dogs_vs_cats/experiments/
 dogs_vs_cats/data/
+dogs_vs_cats/pretrained_models/
 *.pyc
 *.xml

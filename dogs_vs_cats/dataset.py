@@ -6,6 +6,7 @@ from fuel.datasets.dogs_vs_cats import DogsVsCats
 from fuel.schemes import ShuffledScheme, SequentialScheme
 from fuel.streams import DataStream
 from fuel.transformers import ExpectsAxisLabels, SourcewiseTransformer
+#from testing import mean_with_list_axis
 
 def dataset_division(Ntrain=17500, Nvalid=3750, Ntest=3750, seed=123456):
     np.random.seed(seed)
@@ -82,14 +83,20 @@ class InMemoryDataset(Dataset):
 
 
 class FuelDataset(Dataset):
-    def __init__(self, mode, tmp_size, source="image_features", batch_size=1, source_targets=None, shuffle=True):
+    def __init__(self, mode, tmp_size, source="image_features", batch_size=1, bagging=1, bagging_iterator=0,
+                 source_targets=None, shuffle=True):
         self.mode = mode
         self.tmp_size = tmp_size
+        self.bagging = bagging
+        self.bagging_iterator = bagging_iterator
         super( FuelDataset, self).__init__(source, batch_size, source_targets, shuffle)
         self.on_new_epoch()
 
     def load_dataset(self, source):
         index_train, index_valid, index_test = dataset_division()
+        for i in range(self.bagging_iterator):
+            np.random.shuffle(index_train)
+        index_train = index_train[0:int(self.bagging*index_train.shape[0])]
         train = DogsVsCats(('train',))
         if self.mode == "train":
             if self.shuffle:
@@ -149,6 +156,42 @@ class FuelDataset(Dataset):
                 targets = np.concatenate((targets,batch[1]))
         return dataset, targets
 
+def extrapolate(im):
+    """Duplicate the last row/col to make im be squared."""
+    rows, cols = im.shape[0:2]
+    if rows > cols:
+        out = np.concatenate((np.repeat(im[:,0:1], (rows-cols)/2, axis=1), im), axis=1)
+        out = np.concatenate((out, np.repeat(im[:,-1:], rows-out.shape[1], axis=1)), axis=1)
+    else:
+        out = np.concatenate((np.repeat(im[0:1,:], (cols-rows)/2, axis=0), im), axis=0)
+        out = np.concatenate((out, np.repeat(im[-1:,:], cols-out.shape[0], axis=0)), axis=0)
+    return out
+
+def zero_padding(im):
+    """0-padding to make im be squared."""
+    rows, cols = im.shape[0:2]
+    if rows > cols:
+        out = np.concatenate((np.repeat(im[:,0:1]*0, (rows-cols)/2, axis=1), im), axis=1)
+        out = np.concatenate((out, np.repeat(im[:,-1:]*0, rows-out.shape[1], axis=1)), axis=1)
+    else:
+        out = np.concatenate((np.repeat(im[0:1,:]*0, (cols-rows)/2, axis=0), im), axis=0)
+        out = np.concatenate((out, np.repeat(im[-1:,:]*0, cols-out.shape[0], axis=0)), axis=0)
+    return out
+
+# def random_padding(im):
+#     """random-padding the last row/col to make im be squared."""
+#     rows, cols = im.shape[0:2]
+#     m = mean_with_list_axis(im, [0,1])
+#     std = mean_with_list_axis(np.square(im-m), [0,1])
+#     std = np.sqrt(std)
+#     if rows > cols:
+#         out = np.concatenate((np.abs(np.random.randn(rows, (rows-cols)/2, im.shape[2])*std+m), im), axis=1)
+#         out = np.concatenate((out, np.abs(np.random.randn(rows, rows-out.shape[1], im.shape[2])*std+m)), axis=1)
+#     else:
+#         out = np.concatenate((np.abs(np.random.randn((cols-rows)/2, cols, im.shape[2])*std+m), im), axis=0)
+#         out = np.concatenate((out, np.abs(np.random.randn(cols-out.shape[0], cols, im.shape[2])*std+m)), axis=0)
+#     return np.array(out, "uint8")
+
 class ResizeImage(SourcewiseTransformer, ExpectsAxisLabels):
     """Resize (lists of) images to minimum dimensions.
 
@@ -170,7 +213,7 @@ class ResizeImage(SourcewiseTransformer, ExpectsAxisLabels):
     The format of the stream is unaltered.
 
     """
-    def __init__(self, data_stream, new_shape, resample='nearest',
+    def __init__(self, data_stream, new_shape, resample='bicubic',
                  **kwargs):
         self.new_shape = new_shape
         try:
@@ -202,6 +245,7 @@ class ResizeImage(SourcewiseTransformer, ExpectsAxisLabels):
             im = example.transpose(1, 2, 0)
         else:
             im = example
+        #im = random_padding(im)
         im = Image.fromarray(im)
         im = np.array(im.resize((width, height))).astype(dt)
         # If necessary, undo the axis swap from earlier.
@@ -264,6 +308,7 @@ class ResizeAndGrayscaleImage(SourcewiseTransformer, ExpectsAxisLabels):
             im = example.transpose(1, 2, 0)
         else:
             im = example
+        #im = extrapolate(im)
         im = Image.fromarray(im).convert("L")
         im = np.array(im.resize((width, height))).astype(dt)
         example = im[None,:,:]

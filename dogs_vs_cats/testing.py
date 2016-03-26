@@ -8,95 +8,11 @@ from keras.models import Graph
 import os
 import pickle
 from scipy.ndimage.filters import gaussian_filter
+from dataset import InMemoryDataset, FuelDataset
 from preprocessing import standardize_dataset, convert_labels, preprocess_dataset
 
 def categorical_crossentropy(ytrue, ypred, eps=1e-6):
     return -np.mean((ytrue*np.log(ypred+eps)).sum(axis=1))
-
-def get_loss_and_acc(path_to_experiment, subdir_names="MEM", history_files_name="history.pkl", return_dirs=False):
-    expe_list = os.listdir(path_to_experiment)
-    expe_list = [path_to_experiment+"/"+dir_ for dir_ in expe_list if dir_.find(subdir_names)==0]
-    # Open history.pkl files
-    train_loss = []
-    valid_loss = []
-    train_acc = []
-    valid_acc = []
-    for dir_ in expe_list:
-        with open(dir_+"/%s"%history_files_name, "r") as f:
-            train_loss.append(pickle.load(f))
-            valid_loss.append(pickle.load(f))
-            train_acc.append(pickle.load(f))
-            valid_acc.append(pickle.load(f))
-    if return_dirs:
-        return train_loss, valid_loss, train_acc, valid_acc, expe_list
-    return train_loss, valid_loss, train_acc, valid_acc
-
-def get_model(path, weights_name="best_model.cnn", config_name="config.netconf"):
-     # Path to the weights and config
-    best_model_weights = os.path.join(path, weights_name)
-    best_model_config =os.path.join(path, config_name)
-    # Create the model from cofig
-    model = model_from_json(open(best_model_config).read())
-    # Load weights
-    model.load_weights(best_model_weights)
-    return model, best_model_weights
-
-def get_best_model_from_exp(path_to_experiment, subdir_names="MEM", history_files_name="history.pkl",
-                            weights_name="best_model.cnn", config_name="config.netconf"):
-
-    train_loss, valid_loss, train_acc, valid_acc, expe_list = get_loss_and_acc(path_to_experiment, subdir_names,
-                                                                               history_files_name, return_dirs=True)
-    # Get the best model on the validation set
-    best_index = np.argmax([max(acc) for acc in valid_acc])
-    # Create the model from cofig
-    model, path_model = get_model(expe_list[best_index], weights_name, config_name)
-    return model, path_model
-
-
-def test_model(model, dataset, training_params, flip=False, return_preds=False, verbose=True):
-    """
-    Expects a 4D dataset (N, rows, cols, channels).
-    Expects binary labels.
-    """
-    # New epoch
-    dataset.on_new_epoch()
-    N = training_params.Ntest/training_params.test_batch_size
-    for i in range(N):
-        if verbose:
-            print "\rBatch %d over %d"%(i,N),
-        # Get next batch
-        batch,targets= dataset.get_batch()
-        # Eventually flip
-        if flip:
-            batch = np.fliplr(batch.transpose(1,2,3,0)).transpose(3,0,1,2)
-        # Preprocess
-        for mode in training_params.valid_preprocessing:
-            batch = preprocess_dataset(batch, training_params, mode)
-        # Predict
-        if type(model) is Graph:
-            pred = model.predict({"input":np.array(batch.transpose(0,3,1,2), "float32")})["output"]
-        else:
-            pred = model.predict(np.array(batch.transpose(0,3,1,2), "float32"))
-        # Accumulate preds
-        if i==0:
-            predictions = np.copy(pred)
-            labels = np.copy(convert_labels(targets))
-        else:
-            predictions = np.concatenate((predictions,pred))
-            labels = np.concatenate((labels,convert_labels(targets)))
-    if verbose:
-        print "\r"
-    # Compute accuracy
-    test_loss = categorical_crossentropy(labels, predictions).mean()
-    count = np.sum(np.argmax(labels, axis=1) - np.argmax(predictions, axis=1) == 0)
-    score = float(count)/labels.shape[0]
-    if verbose:
-        print "Accuracy = %.3f"%(score)
-        print "Test Loss = %.3f"%(test_loss)
-    if return_preds:
-        return score, test_loss, predictions, labels
-    else:
-        return score, test_loss
 
 def update_BN_params(model, dataset, scale=1.0, N=100, verbose=False):
     # Get the names of each layer
@@ -227,4 +143,331 @@ def mean_with_list_axis(a, ax):
         for i in ax[::-1][1:]:
             out = np.mean(out, axis=i)
     return out
+
+def get_loss_and_acc(path_to_experiment, subdir_names="MEM", history_files_name="history.pkl", return_dirs=False):
+    expe_list = os.listdir(path_to_experiment)
+    expe_list = [path_to_experiment+"/"+dir_ for dir_ in expe_list if dir_.find(subdir_names)==0]
+    # Open history.pkl files
+    train_loss = []
+    valid_loss = []
+    train_acc = []
+    valid_acc = []
+    for dir_ in expe_list:
+        with open(dir_+"/%s"%history_files_name, "r") as f:
+            train_loss.append(pickle.load(f))
+            valid_loss.append(pickle.load(f))
+            train_acc.append(pickle.load(f))
+            valid_acc.append(pickle.load(f))
+    if return_dirs:
+        return train_loss, valid_loss, train_acc, valid_acc, expe_list
+    return train_loss, valid_loss, train_acc, valid_acc
+
+def get_model(path, weights_name="best_model.cnn", config_name="config.netconf"):
+     # Path to the weights and config
+    best_model_weights = os.path.join(path, weights_name)
+    best_model_config =os.path.join(path, config_name)
+    # Create the model from cofig
+    model = model_from_json(open(best_model_config).read())
+    # Load weights
+    model.load_weights(best_model_weights)
+    return model, best_model_weights
+
+def get_best_model_from_exp(path_to_experiment, subdir_names="MEM", history_files_name="history.pkl",
+                            weights_name="best_model.cnn", config_name="config.netconf"):
+
+    train_loss, valid_loss, train_acc, valid_acc, expe_list = get_loss_and_acc(path_to_experiment, subdir_names,
+                                                                               history_files_name, return_dirs=True)
+    # Get the best model on the validation set
+    best_index = np.argmax([max(acc) for acc in valid_acc])
+    # Create the model from cofig
+    model, path_model = get_model(expe_list[best_index], weights_name, config_name)
+    return model, path_model
+
+def predict(model, dataset, training_params, flip, verbose=True):
+    # New epoch
+    dataset.on_new_epoch()
+    N = training_params.Ntest/training_params.test_batch_size
+    if N==0:
+        raise Exception("Ntest = 0.")
+    for i in range(N):
+        if verbose:
+            print "\rBatch %d over %d"%(i,N),
+        # Get next batch
+        batch,targets= dataset.get_batch()
+        # Eventually flip
+        if flip:
+            batch = np.fliplr(batch.transpose(1,2,3,0)).transpose(3,0,1,2)
+        # Preprocess
+        for mode in training_params.valid_preprocessing:
+            batch = preprocess_dataset(batch, training_params, mode)
+        # Predict
+        if type(model) is Graph:
+            pred = model.predict({"input":np.array(batch.transpose(0,3,1,2), "float32")})["output"]
+        else:
+            pred = model.predict(np.array(batch.transpose(0,3,1,2), "float32"))
+        # Accumulate preds
+        if i==0:
+            predictions = np.copy(pred)
+            labels = np.copy(convert_labels(targets))
+        else:
+            predictions = np.concatenate((predictions,pred))
+            labels = np.concatenate((labels,convert_labels(targets)))
+
+    return predictions, labels
+
+def multiscale_predict(model, training_params, division="leaderboard", verbose=False):
+    initial_input_shape = model.input_shape
+    k = 0
+    for test_size in training_params.test_sizes:
+        if verbose:
+            print "\nTesting for size :" + str(test_size)
+        # Get the best model
+        if test_size[0] != model.input_shape[2] or test_size[1] != model.input_shape[3]:
+            new_model = adapt_to_new_input(model, (test_size[2],test_size[0],test_size[1]), initial_input_shape[1:],
+                                           verbose=True)
+        else:
+            new_model = model
+        testset = FuelDataset("test", test_size, batch_size=training_params.test_batch_size, shuffle=False,
+                              division=division)
+        preds, labels  = predict(new_model, testset, training_params, flip=False, verbose=verbose)
+        if k == 0:
+            final_preds = np.copy(preds)
+        else:
+            final_preds += preds
+        k+=1.0
+        # Predictions on the flipped testset
+        flipped_preds, labels = predict(new_model, testset, training_params, flip=True, verbose=verbose)
+        final_preds += flipped_preds
+        k+=1.0
+
+    # Arithmetic averaging of predictions
+    final_preds_arithm = final_preds/k
+
+    return final_preds_arithm, labels
+
+def test_model(model, dataset, training_params, flip=False, return_preds=False, verbose=True):
+    """
+    Expects a 4D dataset (N, rows, cols, channels).
+    Expects binary labels.
+    """
+    # Prediction
+    predictions, labels = predict(model, dataset, training_params, flip, verbose)
+    if verbose:
+        print "\r"
+    # Compute metrics
+    test_loss = categorical_crossentropy(labels, predictions).mean()
+    count = np.sum(np.argmax(labels, axis=1) - np.argmax(predictions, axis=1) == 0)
+    score = float(count)/labels.shape[0]
+    if verbose:
+        print "Accuracy = %.3f"%(score)
+        print "Test Loss = %.3f"%(test_loss)
+    if return_preds:
+        return score, test_loss, predictions, labels
+    else:
+        return score, test_loss
+
+def test_model_on_exp(training_params, verbose=False, write_txt_file=False):
+    model, path_model = get_best_model_from_exp(training_params.path_out)
+    initial_input_shape = model.input_shape
+    print "\n" + path_model
+    k = 0
+    lines = []
+    for test_size in training_params.test_sizes:
+        if verbose:
+            s = "\nTesting for size :" + str(test_size)
+            print s
+            lines.append(s)
+        # Get the best model
+        if test_size[0] != model.input_shape[2] or test_size[1] != model.input_shape[3]:
+            new_model = adapt_to_new_input(model, (test_size[2],test_size[0],test_size[1]), initial_input_shape[1:],
+                                           verbose=True)
+        else:
+            new_model = model
+
+        testset = FuelDataset("test", test_size, batch_size=training_params.test_batch_size, shuffle=False,
+                              division="not_leaderboard")
+        score, loss, preds, labels  = test_model(new_model, testset, training_params,
+                                                 flip=False, verbose=verbose, return_preds=True)
+        if write_txt_file:
+            lines.append("\n\tDraw testset score = %.5f\n\tDraw testset loss = %.5f"%(score,loss))
+        if k == 0:
+            final_preds = np.copy(preds)
+        else:
+            final_preds += preds
+        k+=1.0
+        # Predictions on the flipped testset
+        flipped_score, flipped_loss, flipped_preds, labels = test_model(new_model, testset, training_params,
+                                                                        flip=True, verbose=verbose, return_preds=True)
+        if write_txt_file:
+            lines.append("\n\tFlipped testset score = %.5f\n\tFlipped testset loss = %.5f"%(flipped_score,flipped_loss))
+        final_preds += flipped_preds
+        k+=1.0
+
+    # Arithmetic averaging of predictions
+    final_preds_arithm = final_preds/k
+    count = np.sum(np.argmax(labels, axis=1) - np.argmax(final_preds_arithm, axis=1) == 0)
+    final_score_arithm = float(count)/labels.shape[0]
+    if verbose:
+        s = "\nFinal score (arithm) =%.5f"%final_score_arithm
+        print s
+        lines.append(s)
+
+    if write_txt_file:
+        f = open(training_params.path_out+"/testset_score.txt", "w")
+        for line in lines:
+            f.writelines(line)
+        f.close()
+
+    return final_preds_arithm, final_score_arithm, labels
+
+def test_ensemble_of_models(training_params, path_out=os.path.abspath("experiments/ensemble_of_models.txt"),
+                            write_txt=True, verbose=True):
+    predictions = []
+    scores = []
+    for i,path in enumerate(training_params.ensemble_models):
+        # For each model, get the predictions
+        training_params.path_out = path
+        # Get predictions, No need to get the testset
+        model_preds, model_score, labels = test_model_on_exp(training_params,
+                                                             verbose=verbose, write_txt_file=False)
+        training_params.test_sizes = [(270,270,3), (210,210,3)]
+        # Accumulate predictions and scores
+        predictions.append(model_preds)
+        scores.append(model_score)
+        if verbose:
+            print "%s = %.5f"%(path, model_score)
+    # Fusion
+    final_predictions = np.mean(np.array(predictions), axis=0)
+    count = np.sum(np.argmax(labels, axis=1) - np.argmax(final_predictions, axis=1) == 0)
+    final_score = float(count)/labels.shape[0]
+    if verbose:
+        print "Ensemble Score = %.5f\n"%(final_score)
+    # Write the result in a textfile
+    if write_txt:
+        f = open(path_out, "w")
+        for i,path in enumerate(training_params.ensemble_models):
+            f.writelines("%s = %.5f\n"%(path,scores[i]))
+        f.writelines("Ensemble Score = %.5f\n"%(final_score))
+        f.close()
+
+def generate_submission_file(training_params, path_out=os.path.abspath("experiments/submission_file.txt"),
+                            verbose=True):
+    predictions = []
+    for i,path in enumerate(training_params.ensemble_models):
+        # For each model, get the predictions
+        model, path_model = get_best_model_from_exp(path)
+        if verbose:
+            print "Model : %s"%(path_model)
+        # Get predictions, No need to get the testset
+        preds, labels = multiscale_predict(model, training_params, division="leaderboard",
+                                                 verbose=verbose)
+        # Accumulate predictions and scores
+        predictions.append(preds)
+
+    # Fusion
+    final_predictions = np.mean(np.array(predictions), axis=0)
+    binary_predictions = 1.0-np.argmax(final_predictions, axis=1) # Dogs->1, Cats->0
+    # Write the result in a textfile
+    f = open(path_out, "w")
+    f.writelines("id,label\n")
+    for i,label in enumerate(binary_predictions):
+        f.writelines("%d,%d\n"%(i+1, int(label)))
+    f.close()
+
+def get_features(model, dataset, position, N, training_params, verbose, flip=False):
+
+    intermediate_outputs = K.function([model.layers[0].input], [model.layers[position].get_output(train=False)])
+
+    if N==0:
+        raise Exception("Ntest = 0.")
+    for i in range(N):
+        if verbose:
+            print "\rBatch %d over %d"%(i,N),
+        # Get next batch
+        batch,targets= dataset.get_batch()
+        # Eventually flip
+        if flip:
+            batch = np.fliplr(batch.transpose(1,2,3,0)).transpose(3,0,1,2)
+        # Preprocess
+        for mode in training_params.valid_preprocessing:
+            batch = preprocess_dataset(batch, training_params, mode)
+        # Predict
+        pred = intermediate_outputs([np.array(batch.transpose(0,3,1,2), "float32")])[0]
+        # Accumulate preds
+        if i==0:
+            predictions = np.copy(pred)
+            labels = np.copy(convert_labels(targets))
+        else:
+            predictions = np.concatenate((predictions,pred))
+            labels = np.concatenate((labels,convert_labels(targets)))
+
+    return predictions, labels
+
+def get_features_on_exp(position, mode, N, training_params, verbose=False):
+
+    model, path_model = get_best_model_from_exp(training_params.path_out)
+    initial_input_shape = model.input_shape
+    print "\n" + path_model
+    k = 0
+    out = []
+    for test_size in training_params.test_sizes:
+        if verbose:
+            s = "\nTesting for size :" + str(test_size)
+            print s
+        # Get the best model
+        if test_size[0] != model.input_shape[2] or test_size[1] != model.input_shape[3]:
+            new_model = adapt_to_new_input(model, (test_size[2],test_size[0],test_size[1]), initial_input_shape[1:],
+                                           verbose=True)
+        else:
+            new_model = model
+
+        dataset = FuelDataset(mode, test_size, batch_size=training_params.test_batch_size, shuffle=False,
+                              division=training_params.division)
+        preds, labels  = get_features(new_model, dataset, position, N, training_params, True, flip=False)
+        # Predictions on the flipped testset
+        flipped_preds, flipped_labels  = get_features(new_model, dataset, position, N, training_params, True,
+                                                      flip=False)
+        out.append(preds)
+        out.append(flipped_preds)
+    return out, labels
+
+def generate_csv_file(name, position, training_params):
+
+    training_params.division = "not_leaderboard"
+    subnames = ["150x150", "150x150_flipped","210x210", "210x210_flipped","270x270", "270x270_flipped"]
+
+    mode = "test"
+    N = training_params.Ntest/training_params.test_batch_size
+    out, labels = get_features_on_exp(position, mode, N, training_params, True)
+    # Write csv file
+    path = training_params.path_out + "/" + name + "_" + mode + "_"
+    for i,elem in enumerate(out):
+        np.savetxt(path+subnames[i]+".csv", elem, delimiter=",")
+    np.savetxt(path+"labels.csv", labels)
+
+    mode = "valid"
+    N = training_params.Nvalid/training_params.test_batch_size
+    out, labels = get_features_on_exp(position, mode, N, training_params, True)
+    # Write csv file
+    path = training_params.path_out + "/" + name + "_" + mode + "_"
+    for i,elem in enumerate(out):
+        np.savetxt(path+subnames[i]+".csv", elem, delimiter=",")
+    np.savetxt(path+"labels.csv", labels)
+
+    mode = "train"
+    N = training_params.Ntrain/training_params.test_batch_size
+    out, labels = get_features_on_exp(position, mode, N, training_params, True)
+    # Write csv file
+    path = training_params.path_out + "/" + name + "_" + mode + "_"
+    for i,elem in enumerate(out):
+        np.savetxt(path+subnames[i]+".csv", elem, delimiter=",")
+    np.savetxt(path+"labels.csv", labels)
+
+
+
+
+
+
+
+
 

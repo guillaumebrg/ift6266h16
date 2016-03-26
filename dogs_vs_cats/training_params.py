@@ -13,7 +13,7 @@ class TrainingParams():
         self.model_definition = net
         self.model_args = []
         # Training parameters
-        self.learning_rate = 0.008
+        self.learning_rate = 0.08
         self.learning_rate_min = 0.0008
         self.momentum = 0.9
         self.max_no_best = 10
@@ -21,9 +21,9 @@ class TrainingParams():
         self.verbose = 2
         self.batch_size = 32
         # Data processing
-        self.Ntrain = 17500
-        self.Nvalid = 3750
-        self.Ntest = 3750
+        self.Ntrain = 17500 # Only used to set the nb of examples per epoch in the fit_generator function
+        self.Nvalid = 3750 # Not used
+        self.Ntest = 3750 # Not used
         self.bagging_iterator = 0
         self.bagging_size = 1.0
         self.tmp_size = (250,250,3)
@@ -35,6 +35,7 @@ class TrainingParams():
         self.max_crop_rate = 5
         self.pretrained_model = None # used if preprocessing = 'features_generator', else set to None
         self.data_access = "fuel"
+        self.division = "not_leaderboard" # 'leaderboard' to use the dataset split proposed on the leaderboard page
         if platform.system()=="Linux":
             self.data_access = "fuel"
         self.dataset_path = "path_to_numpy_file" # only used if data_access = 'in-memory'
@@ -53,19 +54,21 @@ class TrainingParams():
                                self.bagging_size,
                                self.bagging_iterator,
                                self.multiple_inputs,
+                               self.division,
                                self.preprocessing_func,
                                self.preprocessing_args]
 
         self.valid_preprocessing = ["scale"] # scale, std, mean, or blur
         # Saving dir
-        self.path_out = os.path.abspath("experiments/win46_adversarial_from_scratch")
+        self.path_out = os.path.abspath("experiments/blog_post_5_scale_invariant/vggnet_with_BN_RGB_window_100_v2")
         self.multiple_training = 1 # number of training - see update_params_for_next_training
         self.fine_tuning = 0 # If weights to finetune are in MEM_4, set self.fine_tuning = 5
         # Testing parameters
-        self.test_sizes = [(150,150,3)]
+        self.test_sizes = [(270,270,3),(210,210,3),(150,150,3)]
         self.test_batch_size = 50
-        self.ensemble_models = ["experiments/vggnet_with_BN_RGB_window_46_v2_512",
-                                "experiments/vggnet_with_BN_RGB_window_100_v2"]
+        # self.ensemble_models = ["experiments/blog_post_5_scale_invariant/vggnet_with_BN_RGB_window_46_v2_512",
+        #                         "experiments/blog_post_5_scale_invariant/vggnet_with_BN_RGB_window_100_v2"]
+        self.ensemble_models = [self.path_out]
         # Update arguments of the initialize the model
         self.update_model_args()
 
@@ -75,7 +78,7 @@ class TrainingParams():
         self.preprocessing_args[8] = rotate_crop_and_scale
         self.preprocessing_args[9] = [(150,150), 10, 5, 1.0]
         self.valid_preprocessing = "scale"
-        self.path_out = os.path.abspath("experiments/vggnet_with_BN_RGB_more_maps_no_norm")
+        self.path_out = os.path.abspath("experiments/debug")
 
 
     def wrapper(self, func, args):

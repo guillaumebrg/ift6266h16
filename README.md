@@ -30,3 +30,6 @@ Tutorial take from here : http://deeplearning.net/tutorial/
 
 Plot images from the dogs vs cats dataset - Compute some statistics on image sizes - Test of a preprocessing function operating data augmentation
 
+- :::::::::::::::: Adversarial examples  :::::::::::::::::::::
+
+Code for adversarial examples generation

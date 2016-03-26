@@ -15,7 +15,8 @@ from preprocessing import resize_pil, check_preprocessed_data, convert_labels, s
 from reporting import write_experiment_report, print_architecture
 from training_params import TrainingParams
 from dataset import InMemoryDataset, FuelDataset
-from testing import get_best_model_from_exp, test_model, update_BN_params, adapt_to_new_input, categorical_crossentropy
+from testing import get_best_model_from_exp, test_model, update_BN_params, generate_submission_file, \
+    adapt_to_new_input, categorical_crossentropy, predict, test_ensemble_of_models, test_model_on_exp, generate_csv_file
 
 def save_history(path, history):
     """
@@ -127,16 +128,17 @@ def timer(name):
     stop_time = time.time()
     print('\n{} took {} seconds'.format(name, stop_time - start_time))
 
-def load_dataset_in_memory_and_resize(data_access, set, dataset_path, targets_path, tmp_size, final_size, batch_size):
+def load_dataset_in_memory_and_resize(data_access, set, division, dataset_path, targets_path, tmp_size,
+                                      final_size, batch_size):
     if data_access == "in-memory":
         with timer("Loading %s data"%set):
-            dataset = InMemoryDataset(set, dataset_path, source_targets=targets_path)
+            dataset = InMemoryDataset(set, dataset_path, source_targets=targets_path, division=division)
             draw_data = np.copy(dataset.dataset)
             targets = np.copy(dataset.targets)
             del dataset
     elif data_access == "fuel":
         with timer("Loading %s data"%set):
-            dataset = FuelDataset(set, tmp_size, batch_size=batch_size, shuffle=False)
+            dataset = FuelDataset(set, tmp_size, batch_size=batch_size, shuffle=False, division=division)
             draw_data,targets = dataset.return_whole_dataset()
             del dataset
     else:
@@ -163,8 +165,9 @@ def launch_training(training_params):
     if os.path.exists(training_params.path_out) is False:
         os.mkdir(os.path.abspath(training_params.path_out))
 
-    ###### LOADING DATA #######
-    validset, valid_targets = load_dataset_in_memory_and_resize(training_params.data_access, "valid", training_params.dataset_path,
+    ###### LOADING VALIDATION DATA #######
+    validset, valid_targets = load_dataset_in_memory_and_resize(training_params.data_access, "valid",
+                                                                training_params.division, training_params.dataset_path,
                                                                 training_params.targets_path, training_params.final_size,
                                                                 training_params.final_size, training_params.test_batch_size)
     valid_targets = convert_labels(valid_targets)
@@ -220,7 +223,7 @@ def launch_training(training_params):
 
             history = model.fit_generator(training_params.generator(*training_params.generator_args),
                                           nb_epoch=training_params.nb_max_epoch,
-                                          samples_per_epoch= int(training_params.Ntrain*training_params.bagging_size)/5,
+                                          samples_per_epoch= int(training_params.Ntrain*training_params.bagging_size),
                                           show_accuracy=True,
                                           verbose=training_params.verbose,
                                           validation_data=(validset,  valid_targets),
@@ -231,118 +234,198 @@ def launch_training(training_params):
             save_history(training_params.path_out+"/MEM_%d/history.pkl"%count, history)
             count += 1
 
-def test_model_on_exp(training_params, testset=None, labels=None, verbose=False, write_txt_file=False,
-                      return_testset=False):
-    # Get the best model
-    model, path_model = get_best_model_from_exp(training_params.path_out)
-    initial_input_shape = model.input_shape
-    print "\n" + path_model
-    k = 0
-    lines = []
-    for test_size in training_params.test_sizes:
-        if verbose:
-            s = "\nTesting for size :" + str(test_size)
-            print s
-            lines.append(s)
-        # Get the best model
-        if test_size[0] != model.input_shape[2] or test_size[1] != model.input_shape[3]:
-            new_model = adapt_to_new_input(model, (test_size[2],test_size[0],test_size[1]), initial_input_shape[1:],
-                                           verbose=True)
-        else:
-            new_model = model
-        # if testset is None or labels is None:
-        #     # If not given, get the testset
-        #     testset, testset_labels = load_dataset_in_memory_and_resize(training_params.data_access, "test",
-        #                                                                 training_params.dataset_path,
-        #                                                                 training_params.targets_path,
-        #                                                                 test_size,
-        #                                                                 test_size,
-        #                                                                 training_params.batch_size)
-        #     labels = convert_labels(testset_labels)
-        # if testset.shape[2:4]!=test_size[0:2]:
-        #     new_testset = np.zeros((testset.shape[0], test_size[2], test_size[0], test_size[1]), dtype="float32")
-        #     with timer("Resizing %s images"%set):
-        #         for i in range(testset.shape[0]):
-        #             new_testset[i] = resize_pil(testset[i], testset[0:2]).transpose(2,0,1)
-        #     testset = np.copy(new_testset)
-        #     del new_testset
-        testset = FuelDataset("test", test_size, batch_size=training_params.test_batch_size, shuffle=False)
-        # # Input normalization
-        # if training_params.valid_preprocessing == "scale":
-        #     testset = testset / training_params.scale
-        # if training_params.valid_preprocessing == "std":
-        #     testset = standardize_dataset(testset, [1,2,3])
-        # Predictions on the draw testset
-        score, loss, preds, labels  = test_model(new_model, testset, training_params,
-                                                 flip=False, verbose=verbose, return_preds=True)
-        if write_txt_file:
-            lines.append("\n\tDraw testset score = %.5f\n\tDraw testset loss = %.5f"%(score,loss))
-        if k == 0:
-            final_preds = np.copy(preds)
-        else:
-            final_preds += preds
-        k+=1.0
-        # Predictions on the flipped testset
-        flipped_score, flipped_loss, flipped_preds, labels = test_model(new_model, testset, training_params,
-                                                                        flip=True, verbose=verbose, return_preds=True)
-        if write_txt_file:
-            lines.append("\n\tFlipped testset score = %.5f\n\tFlipped testset loss = %.5f"%(flipped_score,flipped_loss))
-        final_preds += flipped_preds
-        k+=1.0
+def launch_adversarial_training(training_params):
+    """
+    Load the data, and train a Keras model.
 
-    # Arithmetic averaging of predictions
-    final_preds_arithm = final_preds/k
-    count = np.sum(np.argmax(labels, axis=1) - np.argmax(final_preds_arithm, axis=1) == 0)
-    final_score_arithm = float(count)/labels.shape[0]
-    if verbose:
-        s = "\nFinal score (arithm) =%.5f"%final_score_arithm
-        print s
-        lines.append(s)
-    # Geometric fusion
-    # final_preds_geom = np.sqrt(preds*flipped_preds)
-    # count = np.sum(np.argmax(labels, axis=1) - np.argmax(final_preds_geom, axis=1) == 0)
-    # final_score_geom = float(count)/labels.shape[0]
-    # if verbose:
-    #     print "Final score (geom) =%.5f"%final_score_geom
+    :param training_params: a TrainingParams object which contains each parameter of the training
+    :return:
+    """
+    if os.path.exists(training_params.path_out) is False:
+        os.mkdir(os.path.abspath(training_params.path_out))
 
-    if write_txt_file:
-        f = open(training_params.path_out+"/testset_score.txt", "w")
-        for line in lines:
-            f.writelines(line)
-        f.close()
+    ###### LOADING VALIDATION DATA #######
+    validset, valid_targets = load_dataset_in_memory_and_resize(training_params.data_access, "valid", training_params.dataset_path,
+                                                                training_params.targets_path, training_params.final_size,
+                                                                training_params.final_size, training_params.test_batch_size)
+    valid_targets = convert_labels(valid_targets)
 
-    return final_preds_arithm, final_score_arithm, labels
+    ###### Preprocessing VALIDATION DATA #######
+    for mode in training_params.valid_preprocessing:
+        validset = preprocess_dataset(validset, training_params, mode)
+    # Transpose validset >> (N, channel, X, Y)
+    validset = validset.transpose(0,3,1,2)
+    # Multiple input ?
+    if training_params.multiple_inputs>1:
+        validset = [validset for i in range(training_params.multiple_inputs)]
 
+    ###### MODEL INITIALIZATION #######
+    with timer("Model initialization"):
+        model = training_params.initialize_model()
+    if training_params.pretrained_model is not None:
+        with timer("Pretrained Model initialization"):
+            pretrained_model = training_params.initialize_pretrained_model()
+            training_params.generator_args.append(pretrained_model)
+            # preprocessed the validset
+            if type(pretrained_model) is list:
+                features = []
+                for pmodel in pretrained_model:
+                    features.append(pmodel.predict(validset))
+                validset = np.concatenate(features, axis=1)
+            else:
+                validset = pretrained_model.predict(validset)
 
-def test_ensemble_of_models(training_params, path_out=os.path.abspath("experiments/ensemble_of_models.txt"),
-                            write_txt=True, verbose=True):
-    predictions = []
-    scores = []
-    for i,path in enumerate(training_params.ensemble_models):
-        # For each model, get the predictions
-        training_params.path_out = path
-        # Get predictions, No need to get the testset
-        model_preds, model_score, labels = test_model_on_exp(training_params,
-                                                             verbose=verbose, write_txt_file=False)
-        training_params.test_sizes = [(270,270,3), (210,210,3)]
-        # Accumulate predictions and scores
-        predictions.append(model_preds)
-        scores.append(model_score)
-        if verbose:
-            print "%s = %.5f"%(path, model_score)
-    # Fusion
-    final_predictions = np.mean(np.array(predictions), axis=0)
-    count = np.sum(np.argmax(labels, axis=1) - np.argmax(final_predictions, axis=1) == 0)
-    final_score = float(count)/labels.shape[0]
-    if verbose:
-        print "Ensemble Score = %.5f\n"%(final_score)
-    # Write the result in a textfile
-    if write_txt:
-        f = open(path_out, "w")
-        for i,path in enumerate(training_params.ensemble_models):
-            f.writelines("%s = %.5f\n"%(path,scores[i]))
-        f.writelines("Ensemble Score = %.5f\n"%(final_score))
-        f.close()
+    ###### SAVE PARAMS ######
+    s = training_params.print_params()
+    # Save command
+    f = open(training_params.path_out+"/command.txt", "w")
+    f.writelines(" ".join(sys.argv))
+    f.writelines(s)
+    f.close()
+    # Print architecture
+    print_architecture(model, path_out=training_params.path_out + "/architecture.txt")
+
+    ###### TRAINING SET #######
+
+    train_dataset = FuelDataset("train", training_params.tmp_size,
+                                batch_size=training_params.batch_size,
+                                bagging=training_params.bagging_size,
+                                bagging_iterator=training_params.bagging_iterator)
+
+    ###### ADVERSARIAL MAPPING ######
+
+    input_ = model.layers[0].input
+    y_ = model.y
+    layer_output = model.layers[-1].get_output()
+    xent = K.categorical_crossentropy(y_, layer_output)
+    loss = xent.mean()
+    grads = K.gradients(loss, input_)
+    get_grads = K.function([input_, y_], [loss, grads])
+
+    ###### TRAINING LOOP #######
+    count = training_params.fine_tuning
+    epoch_count = 0
+
+    with timer("Training"):
+        while training_params.learning_rate >= training_params.learning_rate_min and epoch_count<training_params.nb_max_epoch:
+
+            if count != 0: # Restart from the best model with a lower LR
+                model = training_params.initialize_model()
+                model.load_weights(training_params.path_out+"/MEM_%d/best_model.cnn"%(count-1))
+                # Recompile get_grads
+                input_ = model.layers[0].input
+                y_ = model.y
+                layer_output = model.layers[-1].get_output()
+                xent = K.categorical_crossentropy(y_, layer_output)
+                loss = xent.mean()
+                grads = K.gradients(loss, input_)
+                get_grads = K.function([input_, y_], [loss, grads])
+
+            best = 0.0
+            patience = training_params.max_no_best
+            losses = []
+            adv_losses = []
+            accuracies = []
+            adv_accuracies = []
+            valid_losses = []
+            valid_accuracies = []
+            epoch_count = 0
+            no_best_count = 0
+            path = training_params.path_out + "/MEM_%d"%count
+            if os.path.exists(path) is False:
+                os.mkdir(path)
+            # Log file
+            f = open(path+"/log.txt", "w")
+            f.write("LR = %.2f\n"%training_params.learning_rate)
+            f.close()
+            # Config file
+            open(path+"/config.netconf", 'w').write(model.to_json())
+
+            while no_best_count < patience and epoch_count < training_params.nb_max_epoch:
+                new = True
+                loss = 0.0
+                adv_loss = 0.0
+                accuracy = 0.0
+                adv_accuracy = 0.0
+                # Trainset Loop
+                N = training_params.Ntrain/(training_params.batch_size*1)
+                for i in range(N):
+                    # Train
+                    print "\rEpoch %d : Batch %d over %d"%(epoch_count, i, N),
+                    processed_batch, labels = get_next_batch(train_dataset, training_params.batch_size,
+                                                             training_params.final_size,
+                                                             training_params.preprocessing_func,
+                                                             training_params.preprocessing_args)
+                    l, acc = model.train_on_batch(processed_batch, labels, accuracy=True)
+                    # Update stats
+                    if new:
+                        loss = l
+                        accuracy = acc
+                    else:
+                        loss = 0.9*loss + 0.1*l
+                        accuracy = 0.9*accuracy + 0.1*acc
+                    # Get adversarial examples
+                    l, grads = get_grads([processed_batch, labels])
+                    updates = np.sign(grads)
+                    adversarials = processed_batch + updates
+                    # Train on adv examples
+                    adv_l, adv_acc = model.train_on_batch(adversarials, labels, accuracy=True)
+                    # Update stats
+                    if new:
+                        adv_loss = adv_l
+                        adv_accuracy = adv_acc
+                        new = False
+                    else:
+                        adv_loss = 0.9*adv_loss + 0.1*adv_l
+                        adv_accuracy = 0.9*adv_accuracy + 0.1*adv_acc
+                # Store stats
+                losses.append(loss)
+                accuracies.append(accuracy)
+                adv_losses.append(adv_loss)
+                adv_accuracies.append(adv_accuracy)
+                # Validset loss and accuracy
+                out = model.predict(validset)
+                valid_loss = categorical_crossentropy(valid_targets, out)
+                count = np.sum(np.argmax(valid_targets, axis=1) - np.argmax(out, axis=1) == 0)
+                score = float(count)/valid_targets.shape[0]
+                valid_losses.append(valid_loss)
+                valid_accuracies.append(score)
+
+                # Stop criterion and Save model
+                string = "***\nEpoch %d: Loss : %0.5f, Adv loss : %0.5f, Valid loss : %0.5f, " \
+                         "Acc : %0.5f, Adv acc : %0.5f, Valid acc : %0.5f"%(epoch_count, losses[-1], adv_losses[-1],
+                                                                            valid_losses[-1], accuracies[-1],
+                                                                            adv_accuracies[-1], valid_accuracies[-1])
+                if score > best:
+                    no_best_count = 0
+                    save_path = path+"/best_model.cnn"
+                    if training_params.verbose>0:
+                        string = string +"\tBEST\n"
+                        print string
+                        write_log(path+"/log.txt", string)
+                    best = score
+                    model.save_weights(save_path, overwrite=True)
+                else:
+                    no_best_count += 1
+                    save_path = path+"/last_epoch.cnn"
+                    if training_params.verbose>0:
+                        string = string + "\n"
+                        print string
+                        write_log(path+"/log.txt", string)
+                    model.save_weights(save_path, overwrite=True)
+                epoch_count += 1
+
+            # Update learning rate
+            training_params.learning_rate *= 0.1
+            training_params.update_model_args()
+            with open(path + "/history.pkl","w") as f:
+                pickle.dump(losses,f)
+                pickle.dump(adv_losses,f)
+                pickle.dump(valid_losses,f)
+                pickle.dump(accuracies,f)
+                pickle.dump(adv_accuracies,f)
+                pickle.dump(valid_accuracies,f)
+            count += 1
 
 
 if __name__ == "__main__":
@@ -359,7 +442,10 @@ if __name__ == "__main__":
         if mode=="-train":
             for i in range(training_params.multiple_training):
                 launch_training(training_params)
-                test_model_on_exp(training_params, verbose=True, write_txt_file=True)
+                if training_params.division == "leaderboard":
+                    generate_submission_file(training_params)
+                else:
+                    test_model_on_exp(training_params, verbose=True, write_txt_file=True)
                 if platform.system()=="Windows":
                     write_experiment_report(training_params.path_out, multipages=True)
                     write_experiment_report(training_params.path_out, multipages=False)
@@ -393,5 +479,9 @@ if __name__ == "__main__":
             test_model_on_exp(training_params, verbose=True, write_txt_file=True)
         elif mode=="-ensemble":
             test_ensemble_of_models(training_params)
+        elif mode=="-submit":
+            generate_submission_file(training_params)
+        elif mode == "-generate_features":
+            generate_csv_file("final_preds", -1, training_params)
         else:
             print "Mode not undertstood. Use '-train', '-check', '-report', or '-test'. Here : %s"%mode

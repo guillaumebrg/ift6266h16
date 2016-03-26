@@ -14,6 +14,12 @@ def dataset_division(Ntrain=17500, Nvalid=3750, Ntest=3750, seed=123456):
     np.random.shuffle(index)
     return index[0:Ntrain], index[Ntrain:(Ntrain+Nvalid)], index[(Ntrain+Nvalid):(Ntrain+Nvalid+Ntest)]
 
+def dataset_division_leaderboard():
+    # Returns trainset and validset indices
+    indices = np.arange(25000)
+    np.random.RandomState(123522).shuffle(indices)
+    return  indices[0:-2500], indices[-2500:]
+
 class Dataset(object):
     def __init__(self, source, batch_size=1, source_targets=None, shuffle=True):
         self.batch_size = batch_size
@@ -39,17 +45,22 @@ class Dataset(object):
         return self.current_batch
 
 class InMemoryDataset(Dataset):
-    def __init__(self, mode, source, batch_size=1, source_targets=None, shuffle=True):
+    def __init__(self, mode, source, batch_size=1, source_targets=None, shuffle=True, division="leaderboard"):
         self.mode = mode
         super( InMemoryDataset, self).__init__(source, batch_size, source_targets, shuffle)
         self.offset = 0
         self.index = np.arange(0,self.dataset.shape[0],1)
         self.iterator = 0
+        self.division = division
         self.on_new_epoch()
 
     def load_dataset(self, source):
         dataset = np.load(source)
-        index_train, index_valid, index_test = dataset_division()
+        if self.division == "leaderboard":
+            index_train, index_valid = dataset_division_leaderboard()
+            index_test = index_valid
+        else:
+            index_train, index_valid, index_test = dataset_division()
         if self.mode == "train":
             return dataset[index_train]
         if self.mode == "valid":
@@ -84,38 +95,51 @@ class InMemoryDataset(Dataset):
 
 class FuelDataset(Dataset):
     def __init__(self, mode, tmp_size, source="image_features", batch_size=1, bagging=1, bagging_iterator=0,
-                 source_targets=None, shuffle=True):
+                 source_targets=None, shuffle=True, division="leaderboard", N=None):
         self.mode = mode
         self.tmp_size = tmp_size
         self.bagging = bagging
         self.bagging_iterator = bagging_iterator
+        self.division = division
+        self.N = N
         super( FuelDataset, self).__init__(source, batch_size, source_targets, shuffle)
         self.on_new_epoch()
 
     def load_dataset(self, source):
-        index_train, index_valid, index_test = dataset_division()
+        # Splitting the dataset
+        if self.division == "leaderboard":
+            index_train, index_valid = dataset_division_leaderboard()
+        else:
+            index_train, index_valid, index_test = dataset_division()
         for i in range(self.bagging_iterator):
             np.random.shuffle(index_train)
         index_train = index_train[0:int(self.bagging*index_train.shape[0])]
-        train = DogsVsCats(('train',))
         if self.mode == "train":
+            dataset = DogsVsCats(('train',))
             if self.shuffle:
                 scheme=ShuffledScheme(index_train,self.batch_size)
             else:
                 scheme=SequentialScheme(index_train,self.batch_size)
         elif self.mode == "valid":
+            dataset = DogsVsCats(('train',))
             if self.shuffle:
                 scheme=ShuffledScheme(index_valid,self.batch_size)
             else:
                 scheme=SequentialScheme(index_valid,self.batch_size)
         elif self.mode == "test":
-            if self.shuffle:
-                scheme=ShuffledScheme(index_test,self.batch_size)
+            if self.division == "leaderboard":
+                self.shuffle = False
+                dataset = DogsVsCats(('test',))
+                scheme=SequentialScheme(range(12500),self.batch_size)
             else:
-                scheme=SequentialScheme(index_test,self.batch_size)
+                dataset = DogsVsCats(('train',))
+                if self.shuffle:
+                    scheme=ShuffledScheme(index_test,self.batch_size)
+                else:
+                    scheme=SequentialScheme(index_test,self.batch_size)
         else:
             raise Exception("Mode not understood. Use : train, valid or test. Here : %s"%self.mode)
-        stream = DataStream(train,iteration_scheme=scheme)
+        stream = DataStream(dataset,iteration_scheme=scheme)
         if self.tmp_size[2]==1:
             downscaled_stream = ResizeAndGrayscaleImage(stream, self.tmp_size[0:2],
                                                         resample="bicubic", which_sources=(source,))

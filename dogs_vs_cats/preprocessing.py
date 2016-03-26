@@ -226,7 +226,7 @@ def get_next_batch(dataset, batch_size, final_size, preprocessing_func, preproce
     return processed_batch, labels
 
 def images_generator(data_access, dataset, targets, batch_size, tmp_size, final_size, bagging_size, bagging_iterator,
-                     multiple_input, preprocessing_func, preprocessing_args):
+                     multiple_input, division, preprocessing_func, preprocessing_args):
     """
     Generator function used when using the keras function 'fit_on_generator'. Can work with InMemoryDataset, FuelDataset.
     Yield a tuple to the training containing a processed batch and
@@ -243,10 +243,11 @@ def images_generator(data_access, dataset, targets, batch_size, tmp_size, final_
     :return: tuple(batch,targets)
     """
     if data_access=="in-memory":
-        train_dataset = InMemoryDataset("train", source=dataset, batch_size=batch_size, source_targets=targets)
+        train_dataset = InMemoryDataset("train", source=dataset, batch_size=batch_size, source_targets=targets,
+                                        division=division)
     elif data_access=="fuel":
         train_dataset = FuelDataset("train", tmp_size, batch_size=batch_size, bagging=bagging_size,
-                                    bagging_iterator=bagging_iterator)
+                                    bagging_iterator=bagging_iterator, division=division)
     else:
         raise Exception("Data access not available. Must be 'fuel' or 'in-memory'. Here : %s."%data_access)
     while 1:
@@ -308,7 +309,7 @@ def check_preprocessed_data(data_access, dataset, targets, batch_size, tmp_size,
     if data_access=="in-memory":
         train_dataset = InMemoryDataset("train", source=dataset, batch_size=batch_size, source_targets=targets)
     elif data_access=="fuel":
-        train_dataset = FuelDataset("train", tmp_size, batch_size=batch_size)
+        train_dataset = FuelDataset("test", tmp_size, batch_size=batch_size, division="leaderboard", shuffle=False)
     else:
         raise Exception("Data access not available. Must be 'fuel' or 'in-memory'. Here : %s."%data_access)
 

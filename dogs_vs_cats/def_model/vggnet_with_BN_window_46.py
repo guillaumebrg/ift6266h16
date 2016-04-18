@@ -3,7 +3,7 @@ __author__ = 'Guillaume'
 from keras.models import Sequential
 from keras.layers.core import Dense, Flatten, Dropout, Activation
 from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
-from keras.layers.advanced_activations import LeakyReLU, PReLU
+from advanced_activations import PReLU
 from keras.layers.normalization import BatchNormalization
 from keras.optimizers import SGD
 from keras.regularizers import l2, ActivityRegularizer

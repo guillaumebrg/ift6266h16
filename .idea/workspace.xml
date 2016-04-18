@@ -2,13 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="c799eedb-f515-4bfe-8c5a-0599db0a4116" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dogs_vs_cats/dataset.py" afterPath="$PROJECT_DIR$/dogs_vs_cats/dataset.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dogs_vs_cats/preprocessing.py" afterPath="$PROJECT_DIR$/dogs_vs_cats/preprocessing.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dogs_vs_cats/reporting.py" afterPath="$PROJECT_DIR$/dogs_vs_cats/reporting.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dogs_vs_cats/runJobs.pbs" afterPath="$PROJECT_DIR$/dogs_vs_cats/runJobs.pbs" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dogs_vs_cats/testing.py" afterPath="$PROJECT_DIR$/dogs_vs_cats/testing.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dogs_vs_cats/train_model.py" afterPath="$PROJECT_DIR$/dogs_vs_cats/train_model.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dogs_vs_cats/training_params.py" afterPath="$PROJECT_DIR$/dogs_vs_cats/training_params.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/dogs_vs_cats/__init__.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/dogs_vs_cats/def_model/advanced_activations.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dogs_vs_cats/def_model/vggnet_with_BN_window_100.py" afterPath="$PROJECT_DIR$/dogs_vs_cats/def_model/vggnet_with_BN_window_100.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/dogs_vs_cats/def_model/vggnet_with_BN_window_46.py" afterPath="$PROJECT_DIR$/dogs_vs_cats/def_model/vggnet_with_BN_window_46.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="ift6266h16.iws" />
@@ -30,10 +27,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="train_model.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="train_model.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/dogs_vs_cats/train_model.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="2.3285093">
+            <state vertical-scroll-proportion="0.0">
               <caret line="314" column="20" selection-start-line="314" selection-start-column="20" selection-end-line="314" selection-end-column="20" />
               <folding>
                 <element signature="e#26#44#0" expanded="true" />
@@ -42,77 +39,34 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="training_params.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/dogs_vs_cats/training_params.py">
+      <file leaf-file-name="advanced_activations.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/dogs_vs_cats/def_model/advanced_activations.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="60" column="0" selection-start-line="60" selection-start-column="0" selection-end-line="60" selection-end-column="0" />
-              <folding>
-                <element signature="e#26#95#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="reporting.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/dogs_vs_cats/reporting.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="160" column="34" selection-start-line="160" selection-start-column="34" selection-end-line="160" selection-end-column="34" />
+            <state vertical-scroll-proportion="0.5014837">
+              <caret line="45" column="32" selection-start-line="45" selection-start-column="32" selection-end-line="45" selection-end-column="32" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="dataset.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/dogs_vs_cats/dataset.py">
+      <file leaf-file-name="vggnet_with_BN_window_46.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/dogs_vs_cats/def_model/vggnet_with_BN_window_46.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="173" column="69" selection-start-line="173" selection-start-column="69" selection-end-line="173" selection-end-column="69" />
-              <folding>
-                <element signature="e#26#44#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="preprocessing.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/dogs_vs_cats/preprocessing.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="150" column="94" selection-start-line="150" selection-start-column="94" selection-end-line="150" selection-end-column="94" />
+              <caret line="5" column="0" selection-start-line="5" selection-start-column="0" selection-end-line="5" selection-end-column="0" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="testing.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/dogs_vs_cats/testing.py">
+      <file leaf-file-name="vggnet_with_BN_window_100.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/dogs_vs_cats/def_model/vggnet_with_BN_window_100.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="9" column="53" selection-start-line="9" selection-start-column="53" selection-end-line="9" selection-end-column="53" />
+              <caret line="12" column="31" selection-start-line="12" selection-start-column="31" selection-end-line="12" selection-end-column="31" />
               <folding>
-                <element signature="e#26#44#0" expanded="true" />
-                <element signature="e#456#1119#0" expanded="false" />
-                <element signature="e#1208#1546#0" expanded="false" />
-                <element signature="e#1745#2224#0" expanded="false" />
-                <element signature="e#2320#2897#0" expanded="false" />
-                <element signature="e#2986#5621#0" expanded="false" />
-                <element signature="e#5648#5699#0" expanded="false" />
-                <element signature="e#5751#6657#0" expanded="false" />
-                <element signature="e#6748#7084#0" expanded="false" />
-                <element signature="e#7123#7255#0" expanded="false" />
+                <element signature="e#26#61#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="__init__.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/first_assignment/__init__.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="1" column="0" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
-              <folding />
             </state>
           </provider>
         </entry>
@@ -141,8 +95,11 @@
         <option value="$PROJECT_DIR$/dogs_vs_cats/def_model/vggnet_with_BN_more_maps.py" />
         <option value="$PROJECT_DIR$/dogs_vs_cats/preprocessing.py" />
         <option value="$PROJECT_DIR$/dogs_vs_cats/training_params.py" />
-        <option value="$PROJECT_DIR$/dogs_vs_cats/train_model.py" />
         <option value="$PROJECT_DIR$/dogs_vs_cats/dataset.py" />
+        <option value="$PROJECT_DIR$/dogs_vs_cats/train_model.py" />
+        <option value="$PROJECT_DIR$/dogs_vs_cats/def_model/vggnet_with_BN_window_46.py" />
+        <option value="$PROJECT_DIR$/dogs_vs_cats/def_model/advanced_activation.py" />
+        <option value="$PROJECT_DIR$/dogs_vs_cats/def_model/vggnet_with_BN_window_100.py" />
       </list>
     </option>
   </component>
@@ -150,10 +107,8 @@
     <order />
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-8" />
-    <option name="y" value="-8" />
-    <option name="width" value="1616" />
-    <option name="height" value="876" />
+    <option name="width" value="1600" />
+    <option name="height" value="860" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -178,6 +133,7 @@
       <sortByType />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
@@ -231,11 +187,20 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="FullScreen" value="false" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Guillaume\Desktop\UDEM\Deep Learning - IFT 6266\ift6266h16\dogs_vs_cats\def_model" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Guillaume\Desktop\UDEM\Deep Learning - IFT 6266\ift6266h16\dogs_vs_cats\def_model" />
+      <recent name="C:\Users\Guillaume\Desktop\UDEM\Deep Learning - IFT 6266\ift6266h16\dogs_vs_cats" />
+    </key>
   </component>
   <component name="RunManager">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
@@ -375,10 +340,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1616" height="876" extended-state="7" />
+    <frame x="0" y="0" width="1600" height="860" extended-state="1" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24651457" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24647887" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3286908" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -416,10 +381,62 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/dogs_vs_cats/def_model/first_convnet.py">
+    <entry file="file://$PROJECT_DIR$/dogs_vs_cats/train_model.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#26#44#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dogs_vs_cats/training_params.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="60" column="0" selection-start-line="60" selection-start-column="0" selection-end-line="60" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dogs_vs_cats/reporting.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="160" column="34" selection-start-line="160" selection-start-column="34" selection-end-line="160" selection-end-column="34" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dogs_vs_cats/dataset.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="173" column="49" selection-start-line="173" selection-start-column="49" selection-end-line="173" selection-end-column="49" />
+          <folding>
+            <element signature="e#26#44#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dogs_vs_cats/preprocessing.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="150" column="44" selection-start-line="150" selection-start-column="44" selection-end-line="150" selection-end-column="44" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dogs_vs_cats/testing.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="9" column="49" selection-start-line="9" selection-start-column="49" selection-end-line="9" selection-end-column="49" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/first_assignment/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="1" column="0" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
           <folding />
         </state>
       </provider>
@@ -437,10 +454,75 @@
     <entry file="file://$PROJECT_DIR$/dogs_vs_cats/training_params.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
+          <caret line="60" column="0" selection-start-line="60" selection-start-column="0" selection-end-line="60" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dogs_vs_cats/reporting.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="160" column="34" selection-start-line="160" selection-start-column="34" selection-end-line="160" selection-end-column="34" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dogs_vs_cats/dataset.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="173" column="49" selection-start-line="173" selection-start-column="49" selection-end-line="173" selection-end-column="49" />
+          <folding>
+            <element signature="e#26#44#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dogs_vs_cats/preprocessing.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="150" column="44" selection-start-line="150" selection-start-column="44" selection-end-line="150" selection-end-column="44" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dogs_vs_cats/testing.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="9" column="49" selection-start-line="9" selection-start-column="49" selection-end-line="9" selection-end-column="49" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/first_assignment/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="1" column="0" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dogs_vs_cats/def_model/first_convnet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dogs_vs_cats/train_model.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#26#95#0" expanded="true" />
+            <element signature="e#26#44#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dogs_vs_cats/training_params.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -448,9 +530,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="31" column="28" selection-start-line="31" selection-start-column="28" selection-end-line="31" selection-end-column="28" />
-          <folding>
-            <element signature="e#26#61#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -466,27 +545,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#26#44#0" expanded="false" />
-            <element signature="e#146#1209#0" expanded="false" />
-            <element signature="e#1241#1417#0" expanded="false" />
-            <element signature="e#1447#9632#0" expanded="false" />
-            <element signature="e#1483#1555#0" expanded="false" />
-            <element signature="e#1601#1856#0" expanded="false" />
-            <element signature="e#1925#2261#0" expanded="false" />
-            <element signature="e#2318#2757#0" expanded="false" />
-            <element signature="e#2847#4398#0" expanded="false" />
-            <element signature="e#4511#5929#0" expanded="false" />
-            <element signature="e#5977#6190#0" expanded="false" />
-            <element signature="e#6238#6608#0" expanded="false" />
-            <element signature="e#6798#9630#0" expanded="false" />
-            <element signature="e#9722#10047#0" expanded="false" />
-            <element signature="e#10092#10912#0" expanded="false" />
-            <element signature="e#10966#11101#0" expanded="false" />
-            <element signature="e#11134#11311#0" expanded="false" />
-            <element signature="e#11270#11311#0" expanded="false" />
-            <element signature="e#11344#11976#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -502,27 +560,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#26#44#0" expanded="false" />
-            <element signature="e#146#1209#0" expanded="false" />
-            <element signature="e#1241#1417#0" expanded="false" />
-            <element signature="e#1447#9632#0" expanded="false" />
-            <element signature="e#1483#1555#0" expanded="false" />
-            <element signature="e#1601#1856#0" expanded="false" />
-            <element signature="e#1925#2261#0" expanded="false" />
-            <element signature="e#2318#2757#0" expanded="false" />
-            <element signature="e#2847#4398#0" expanded="false" />
-            <element signature="e#4511#5929#0" expanded="false" />
-            <element signature="e#5977#6190#0" expanded="false" />
-            <element signature="e#6238#6608#0" expanded="false" />
-            <element signature="e#6798#9630#0" expanded="false" />
-            <element signature="e#9722#10047#0" expanded="false" />
-            <element signature="e#10092#10912#0" expanded="false" />
-            <element signature="e#10966#11101#0" expanded="false" />
-            <element signature="e#11134#11311#0" expanded="false" />
-            <element signature="e#11270#11311#0" expanded="false" />
-            <element signature="e#11344#11976#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -538,27 +575,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.23623188">
           <caret line="45" column="23" selection-start-line="45" selection-start-column="23" selection-end-line="45" selection-end-column="23" />
-          <folding>
-            <element signature="e#26#44#0" expanded="false" />
-            <element signature="e#146#1209#0" expanded="false" />
-            <element signature="e#1241#1417#0" expanded="false" />
-            <element signature="e#1447#9632#0" expanded="false" />
-            <element signature="e#1483#1555#0" expanded="false" />
-            <element signature="e#1601#1856#0" expanded="false" />
-            <element signature="e#1925#2261#0" expanded="false" />
-            <element signature="e#2318#2757#0" expanded="false" />
-            <element signature="e#2847#4398#0" expanded="false" />
-            <element signature="e#4511#5929#0" expanded="false" />
-            <element signature="e#5977#6190#0" expanded="false" />
-            <element signature="e#6238#6608#0" expanded="false" />
-            <element signature="e#6798#9630#0" expanded="false" />
-            <element signature="e#9722#10047#0" expanded="false" />
-            <element signature="e#10092#10912#0" expanded="false" />
-            <element signature="e#10966#11101#0" expanded="false" />
-            <element signature="e#11134#11311#0" expanded="false" />
-            <element signature="e#11270#11311#0" expanded="false" />
-            <element signature="e#11344#11976#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -566,7 +582,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -582,7 +597,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.40356082">
           <caret line="48" column="67" selection-start-line="48" selection-start-column="67" selection-end-line="48" selection-end-column="67" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -598,7 +612,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.6642547">
           <caret line="35" column="72" selection-start-line="35" selection-start-column="72" selection-end-line="35" selection-end-column="72" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -606,16 +619,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.17221418">
           <caret line="25" column="31" selection-start-line="25" selection-start-column="31" selection-end-line="25" selection-end-column="31" />
-          <folding>
-            <element signature="e#0#38#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/dogs_vs_cats/preprocessing.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="150" column="94" selection-start-line="150" selection-start-column="94" selection-end-line="150" selection-end-column="94" />
+          <caret line="150" column="44" selection-start-line="150" selection-start-column="44" selection-end-line="150" selection-end-column="44" />
           <folding />
         </state>
       </provider>
@@ -624,28 +634,14 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.7626628">
           <caret line="31" column="28" selection-start-line="31" selection-start-column="28" selection-end-line="31" selection-end-column="28" />
-          <folding>
-            <element signature="e#26#61#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/dogs_vs_cats/testing.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="9" column="53" selection-start-line="9" selection-start-column="53" selection-end-line="9" selection-end-column="53" />
-          <folding>
-            <element signature="e#26#44#0" expanded="true" />
-            <element signature="e#456#1119#0" expanded="false" />
-            <element signature="e#1208#1546#0" expanded="false" />
-            <element signature="e#1745#2224#0" expanded="false" />
-            <element signature="e#2320#2897#0" expanded="false" />
-            <element signature="e#2986#5621#0" expanded="false" />
-            <element signature="e#5648#5699#0" expanded="false" />
-            <element signature="e#5751#6657#0" expanded="false" />
-            <element signature="e#6748#7084#0" expanded="false" />
-            <element signature="e#7123#7255#0" expanded="false" />
-          </folding>
+          <caret line="9" column="49" selection-start-line="9" selection-start-column="49" selection-end-line="9" selection-end-column="49" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -653,29 +649,63 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="60" column="0" selection-start-line="60" selection-start-column="0" selection-end-line="60" selection-end-column="0" />
-          <folding>
-            <element signature="e#26#95#0" expanded="true" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/dogs_vs_cats/dataset.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="173" column="69" selection-start-line="173" selection-start-column="69" selection-end-line="173" selection-end-column="69" />
+          <caret line="173" column="49" selection-start-line="173" selection-start-column="49" selection-end-line="173" selection-end-column="49" />
           <folding>
             <element signature="e#26#44#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://C:/Python27/install/keras-master/keras/layers/advanced_activations.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="37" column="0" selection-start-line="37" selection-start-column="0" selection-end-line="89" selection-end-column="69" />
+          <folding>
+            <element signature="e#0#30#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/dogs_vs_cats/train_model.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="2.3285093">
+        <state vertical-scroll-proportion="0.0">
           <caret line="314" column="20" selection-start-line="314" selection-start-column="20" selection-end-line="314" selection-end-column="20" />
           <folding>
             <element signature="e#26#44#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dogs_vs_cats/def_model/vggnet_with_BN_window_100.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="12" column="31" selection-start-line="12" selection-start-column="31" selection-end-line="12" selection-end-column="31" />
+          <folding>
+            <element signature="e#26#61#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dogs_vs_cats/def_model/vggnet_with_BN_window_46.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="5" column="0" selection-start-line="5" selection-start-column="0" selection-end-line="5" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dogs_vs_cats/def_model/advanced_activations.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.5014837">
+          <caret line="45" column="32" selection-start-line="45" selection-start-column="32" selection-end-line="45" selection-end-column="32" />
+          <folding />
         </state>
       </provider>
     </entry>

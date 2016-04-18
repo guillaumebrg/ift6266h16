@@ -481,7 +481,9 @@ if __name__ == "__main__":
             test_ensemble_of_models(training_params)
         elif mode=="-submit":
             generate_submission_file(training_params)
-        elif mode == "-generate_features":
-            generate_csv_file("final_preds", -1, training_params)
+        elif mode == "-generate":
+            generate_csv_file("final_preds", -4, training_params)
+            training_params.path_out = os.path.abspath("experiments/WIN100_PReLu_v3_init_0.25")
+            generate_csv_file("final_preds", -4, training_params)
         else:
             print "Mode not undertstood. Use '-train', '-check', '-report', or '-test'. Here : %s"%mode

@@ -284,8 +284,8 @@ def test_model_on_exp(training_params, verbose=False, write_txt_file=False):
         else:
             new_model = model
 
-        testset = FuelDataset("test", test_size, batch_size=training_params.test_batch_size, shuffle=False,
-                              division="not_leaderboard")
+        testset = FuelDataset("valid", test_size, batch_size=training_params.test_batch_size, shuffle=False,
+                              division="leaderboard")
         score, loss, preds, labels  = test_model(new_model, testset, training_params,
                                                  flip=False, verbose=verbose, return_preds=True)
         if write_txt_file:
@@ -357,7 +357,7 @@ def generate_submission_file(training_params, path_out=os.path.abspath("experime
         # For each model, get the predictions
         model, path_model = get_best_model_from_exp(path)
         if verbose:
-            print "Model : %s"%(path_model)
+            print "\nModel : %s"%(path_model)
         # Get predictions, No need to get the testset
         preds, labels = multiscale_predict(model, training_params, division="leaderboard",
                                                  verbose=verbose)
@@ -393,6 +393,8 @@ def get_features(model, dataset, position, N, training_params, verbose, flip=Fal
             batch = preprocess_dataset(batch, training_params, mode)
         # Predict
         pred = intermediate_outputs([np.array(batch.transpose(0,3,1,2), "float32")])[0]
+        if pred.shape[1] != 256 and pred.shape[1] != 512:
+            raise Exception("not the good layer. Dim = %d"%pred.shape[1])
         # Accumulate preds
         if i==0:
             predictions = np.copy(pred)
@@ -426,14 +428,14 @@ def get_features_on_exp(position, mode, N, training_params, verbose=False):
         preds, labels  = get_features(new_model, dataset, position, N, training_params, True, flip=False)
         # Predictions on the flipped testset
         flipped_preds, flipped_labels  = get_features(new_model, dataset, position, N, training_params, True,
-                                                      flip=False)
+                                                      flip=True)
         out.append(preds)
         out.append(flipped_preds)
     return out, labels
 
 def generate_csv_file(name, position, training_params):
 
-    training_params.division = "not_leaderboard"
+    training_params.division = "leaderboard"
     subnames = ["150x150", "150x150_flipped","210x210", "210x210_flipped","270x270", "270x270_flipped"]
 
     mode = "test"

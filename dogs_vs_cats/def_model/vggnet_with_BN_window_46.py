@@ -7,7 +7,7 @@ from keras.layers.advanced_activations import LeakyReLU, PReLU
 from keras.layers.normalization import BatchNormalization
 from keras.optimizers import SGD
 from keras.regularizers import l2, ActivityRegularizer
-
+import numpy as np
 
 def define_model(lr, momentum):
     # CONFIG
@@ -15,7 +15,7 @@ def define_model(lr, momentum):
 
     def activation():
         #return Activation("relu")
-        return PReLU(init='zero', weights=None)
+        return PReLU(alpha=0.25)
 
     # Create Layers
     # CONVNET

@@ -21,9 +21,9 @@ class TrainingParams():
         self.verbose = 2
         self.batch_size = 32
         # Data processing
-        self.Ntrain = 17500 # Only used to set the nb of examples per epoch in the fit_generator function
-        self.Nvalid = 3750 # Not used
-        self.Ntest = 3750 # Not used
+        self.Ntrain = 22500 # Only used to set the nb of examples per epoch in the fit_generator function
+        self.Nvalid = 2500 # Not used
+        self.Ntest = 2500 # Not used
         self.bagging_iterator = 0
         self.bagging_size = 1.0
         self.tmp_size = (250,250,3)
@@ -35,7 +35,7 @@ class TrainingParams():
         self.max_crop_rate = 5
         self.pretrained_model = None # used if preprocessing = 'features_generator', else set to None
         self.data_access = "fuel"
-        self.division = "not_leaderboard" # 'leaderboard' to use the dataset split proposed on the leaderboard page
+        self.division = "leaderboard" # 'leaderboard' to use the dataset split proposed on the leaderboard page
         if platform.system()=="Linux":
             self.data_access = "fuel"
         self.dataset_path = "path_to_numpy_file" # only used if data_access = 'in-memory'
@@ -64,7 +64,7 @@ class TrainingParams():
         self.multiple_training = 1 # number of training - see update_params_for_next_training
         self.fine_tuning = 0 # If weights to finetune are in MEM_4, set self.fine_tuning = 5
         # Testing parameters
-        self.test_sizes = [(270,270,3),(210,210,3),(150,150,3)]
+        self.test_sizes = [(270,270,3), (210,210,3), (150,150,3)]
         self.test_batch_size = 50
         # self.ensemble_models = ["experiments/blog_post_5_scale_invariant/vggnet_with_BN_RGB_window_46_v2_512",
         #                         "experiments/blog_post_5_scale_invariant/vggnet_with_BN_RGB_window_100_v2"]
@@ -79,7 +79,6 @@ class TrainingParams():
         self.preprocessing_args[9] = [(150,150), 10, 5, 1.0]
         self.valid_preprocessing = "scale"
         self.path_out = os.path.abspath("experiments/debug")
-
 
     def wrapper(self, func, args):
         return func(*args)

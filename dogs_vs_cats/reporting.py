@@ -12,7 +12,7 @@ def print_architecture(model, path_out=None):
     if path_out is not None:
         f = open(path_out, "w")
     layers = model.layers
-    activation_pos = [i for i in np.arange(1,len(layers)) if layers[i].name=="activation"]
+    activation_pos = [i for i in np.arange(1,len(layers)) if layers[i].name=="activation" or layers[i].name=="prelu"]
     s = "Achitecture :"
     s += "\n\n\tDepth = %d"%len(activation_pos)
     print s
@@ -34,7 +34,9 @@ def print_architecture(model, path_out=None):
             elif name == "zeropadding2d":
                 s += "\n\t\t%s : %s"%(name, str(layers[count].padding))
             elif name == "activation":
-                s += "\n\t\t%s : %s"%(name, layers[count].get_config()['activation'])
+                s += "\n\t\t%s : %s"%(name, layers[count].get_config()[name])
+            elif name == "prelu":
+                s += "\n\t\tActivation : PReLU"
             elif name == "dense":
                 s += "\n\t\t%s : %d neurons"%(name, layers[count].output_shape[1])
             else:
